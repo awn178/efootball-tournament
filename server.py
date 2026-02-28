@@ -2,10 +2,10 @@ import os
 import json
 import psycopg2
 import uuid
+import base64
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import base64
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
@@ -20,14 +20,120 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
     
-    # Read and execute schema
-    with open('database.sql', 'r') as f:
-        cur.execute(f.read())
+    # Users table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            telegram_id BIGINT UNIQUE,
+            username VARCHAR(255),
+            first_name VARCHAR(255),
+            is_admin BOOLEAN DEFAULT FALSE,
+            is_banned BOOLEAN DEFAULT FALSE,
+            joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Tournaments table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS tournaments (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            type VARCHAR(50) NOT NULL,
+            status VARCHAR(50) DEFAULT 'not_started',
+            created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Tournament settings
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS tournament_settings (
+            id SERIAL PRIMARY KEY,
+            tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+            amount INTEGER NOT NULL,
+            max_players INTEGER NOT NULL,
+            current_registered INTEGER DEFAULT 0,
+            is_active BOOLEAN DEFAULT TRUE
+        )
+    """)
+    
+    # Registrations
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS registrations (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+            setting_id INTEGER REFERENCES tournament_settings(id),
+            amount INTEGER NOT NULL,
+            screenshot_url TEXT,
+            status VARCHAR(50) DEFAULT 'pending',
+            rejection_reason TEXT,
+            submitted_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approved_date TIMESTAMP,
+            approved_by VARCHAR(255)
+        )
+    """)
+    
+    # Messages
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            from_user_id INTEGER REFERENCES users(id),
+            to_user_id INTEGER,
+            message_type VARCHAR(50),
+            content TEXT,
+            sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_read BOOLEAN DEFAULT FALSE
+        )
+    """)
+    
+    # Insert owner
+    cur.execute("""
+        INSERT INTO users (telegram_id, username, first_name, is_admin) 
+        VALUES (0, '@awn175', 'Owner', TRUE) 
+        ON CONFLICT (telegram_id) DO NOTHING
+    """)
+    
+    # Check if tournaments exist
+    cur.execute("SELECT COUNT(*) FROM tournaments")
+    count = cur.fetchone()[0]
+    
+    if count == 0:
+        # Create Knockout tournament
+        cur.execute("""
+            INSERT INTO tournaments (name, type, status) 
+            VALUES ('Knockout Championship', 'knockout', 'not_started') 
+            RETURNING id
+        """)
+        knockout_id = cur.fetchone()[0]
+        
+        # Create League tournament
+        cur.execute("""
+            INSERT INTO tournaments (name, type, status) 
+            VALUES ('League Championship', 'league', 'not_started') 
+            RETURNING id
+        """)
+        league_id = cur.fetchone()[0]
+        
+        # Add settings for Knockout
+        settings = [(30, 16), (50, 32), (100, 64)]
+        for amount, max_players in settings:
+            cur.execute("""
+                INSERT INTO tournament_settings (tournament_id, amount, max_players)
+                VALUES (%s, %s, %s)
+            """, (knockout_id, amount, max_players))
+        
+        # Add settings for League
+        settings = [(30, 15), (50, 15), (100, 15)]
+        for amount, max_players in settings:
+            cur.execute("""
+                INSERT INTO tournament_settings (tournament_id, amount, max_players)
+                VALUES (%s, %s, %s)
+            """, (league_id, amount, max_players))
     
     conn.commit()
     cur.close()
     conn.close()
-    print("Database initialized!")
+    print("✅ Database initialized!")
 
 # Serve HTML files
 @app.route('/')
@@ -43,7 +149,7 @@ def admin():
 def test():
     return jsonify({'status': 'Server is running!'})
 
-# 1. Register user (Telegram login)
+# 1. Register/Login user
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -54,18 +160,18 @@ def login():
     conn = get_db()
     cur = conn.cursor()
     
-    # Check if user exists
     cur.execute("SELECT id, is_admin FROM users WHERE telegram_id = %s", (telegram_id,))
     user = cur.fetchone()
     
     if not user:
-        # New user
         cur.execute(
             "INSERT INTO users (telegram_id, username, first_name) VALUES (%s, %s, %s) RETURNING id",
             (telegram_id, username, first_name)
         )
         user_id = cur.fetchone()[0]
-        is_admin = False
+        is_admin = (username == '@awn175')
+        if is_admin:
+            cur.execute("UPDATE users SET is_admin = TRUE WHERE id = %s", (user_id,))
     else:
         user_id = user[0]
         is_admin = user[1]
@@ -81,23 +187,17 @@ def login():
         'username': username
     })
 
-# 2. Get tournament status
+# 2. Get tournaments
 @app.route('/api/tournaments', methods=['GET'])
 def get_tournaments():
     conn = get_db()
     cur = conn.cursor()
     
-    cur.execute("""
-        SELECT id, name, type, status 
-        FROM tournaments 
-        WHERE status != 'completed'
-        ORDER BY id
-    """)
+    cur.execute("SELECT id, name, type, status FROM tournaments ORDER BY id")
     tournaments = cur.fetchall()
     
     result = []
     for t in tournaments:
-        # Get settings for this tournament
         cur.execute("""
             SELECT amount, max_players, current_registered 
             FROM tournament_settings 
@@ -126,17 +226,24 @@ def get_tournaments():
     
     return jsonify(result)
 
-# 3. Submit registration with screenshot
+# 3. Submit registration
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
     user_id = data.get('user_id')
-    tournament_id = data.get('tournament_id')
+    tournament_type = data.get('tournament_id')  # 'knockout' or 'league'
     amount = data.get('amount')
     screenshot_data = data.get('screenshot')
     
     conn = get_db()
     cur = conn.cursor()
+    
+    # Get tournament_id from type
+    cur.execute("SELECT id FROM tournaments WHERE type = %s", (tournament_type,))
+    tournament = cur.fetchone()
+    if not tournament:
+        return jsonify({'success': False, 'message': 'Tournament not found'})
+    tournament_id = tournament[0]
     
     # Get setting_id
     cur.execute("""
@@ -146,24 +253,22 @@ def register():
     setting = cur.fetchone()
     
     if not setting:
-        return jsonify({'success': False, 'message': 'Invalid tournament or amount'})
+        return jsonify({'success': False, 'message': 'Invalid amount'})
     
     setting_id = setting[0]
     
-    # Save screenshot
+    # Save screenshot (base64 to file)
     screenshot_filename = f"payment_{user_id}_{uuid.uuid4()}.jpg"
     screenshot_path = f"/tmp/{screenshot_filename}"
     
-    # Decode base64 image
     try:
         if ',' in screenshot_data:
             screenshot_data = screenshot_data.split(',')[1]
-        
         img_data = base64.b64decode(screenshot_data)
         with open(screenshot_path, 'wb') as f:
             f.write(img_data)
     except Exception as e:
-        return jsonify({'success': False, 'message': 'Invalid image data'})
+        return jsonify({'success': False, 'message': 'Invalid image'})
     
     # Create registration
     cur.execute("""
@@ -181,7 +286,7 @@ def register():
     
     return jsonify({'success': True, 'registration_id': reg_id})
 
-# 4. Get pending registrations (admin only)
+# 4. Get pending registrations
 @app.route('/api/admin/pending', methods=['GET'])
 def get_pending():
     admin_user = request.args.get('admin')
@@ -192,7 +297,7 @@ def get_pending():
     cur = conn.cursor()
     
     cur.execute("""
-        SELECT r.id, u.username, u.first_name, t.name, r.amount, r.screenshot_url, r.submitted_date
+        SELECT r.id, u.username, t.type, r.amount, r.screenshot_url, r.submitted_date
         FROM registrations r
         JOIN users u ON r.user_id = u.id
         JOIN tournaments t ON r.tournament_id = t.id
@@ -206,11 +311,10 @@ def get_pending():
         result.append({
             'id': p[0],
             'username': p[1],
-            'name': p[2],
-            'tournament': p[3],
-            'amount': p[4],
-            'screenshot': p[5],
-            'date': p[6].isoformat() if p[6] else ''
+            'tournament': p[2],
+            'amount': p[3],
+            'screenshot': p[4],
+            'date': p[5].isoformat() if p[5] else ''
         })
     
     cur.close()
@@ -218,7 +322,7 @@ def get_pending():
     
     return jsonify(result)
 
-# 5. Approve/reject registration (admin only)
+# 5. Approve/reject registration
 @app.route('/api/admin/process_registration', methods=['POST'])
 def process_registration():
     data = request.json
@@ -264,7 +368,36 @@ def process_registration():
     
     return jsonify({'success': True})
 
-# 6. Send message to admin
+# 6. Get approved players
+@app.route('/api/players', methods=['GET'])
+def get_players():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        SELECT u.username, t.type, r.amount
+        FROM registrations r
+        JOIN users u ON r.user_id = u.id
+        JOIN tournaments t ON r.tournament_id = t.id
+        WHERE r.status = 'approved'
+        ORDER BY t.type, r.amount
+    """)
+    
+    players = cur.fetchall()
+    result = []
+    for p in players:
+        result.append({
+            'username': p[0],
+            'tournament': p[1],
+            'amount': p[2]
+        })
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify(result)
+
+# 7. Send message to admin
 @app.route('/api/send_message', methods=['POST'])
 def send_message():
     data = request.json
@@ -285,7 +418,7 @@ def send_message():
     
     return jsonify({'success': True})
 
-# 7. Get messages for admin
+# 8. Get messages for admin
 @app.route('/api/admin/messages', methods=['GET'])
 def get_messages():
     admin_user = request.args.get('admin')
@@ -317,6 +450,107 @@ def get_messages():
     conn.close()
     
     return jsonify(result)
+
+# 9. Update tournament settings (admin)
+@app.route('/api/admin/update_settings', methods=['POST'])
+def update_settings():
+    data = request.json
+    admin_user = data.get('admin')
+    tournament_type = data.get('type')
+    settings = data.get('settings')  # list of {amount, max_players}
+    
+    if admin_user != '@awn175':
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Get tournament_id
+    cur.execute("SELECT id FROM tournaments WHERE type = %s", (tournament_type,))
+    tournament = cur.fetchone()
+    if not tournament:
+        return jsonify({'success': False, 'message': 'Tournament not found'})
+    tournament_id = tournament[0]
+    
+    # Deactivate old settings
+    cur.execute("UPDATE tournament_settings SET is_active = FALSE WHERE tournament_id = %s", (tournament_id,))
+    
+    # Add new settings
+    for s in settings:
+        cur.execute("""
+            INSERT INTO tournament_settings (tournament_id, amount, max_players, current_registered, is_active)
+            VALUES (%s, %s, %s, 0, TRUE)
+        """, (tournament_id, s['amount'], s['max_players']))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+# 10. Start tournament
+@app.route('/api/admin/start_tournament', methods=['POST'])
+def start_tournament():
+    data = request.json
+    admin_user = data.get('admin')
+    tournament_type = data.get('type')
+    
+    if admin_user != '@awn175':
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        UPDATE tournaments 
+        SET status = 'registration' 
+        WHERE type = %s
+    """, (tournament_type,))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+# 11. Send broadcast
+@app.route('/api/admin/broadcast', methods=['POST'])
+def send_broadcast():
+    data = request.json
+    admin_user = data.get('admin')
+    target = data.get('target')  # 'all', 'knockout', 'league', 'specific'
+    specific_user = data.get('specific_user')
+    message = data.get('message')
+    
+    if admin_user != '@awn175':
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    if target == 'all':
+        cur.execute("SELECT id FROM users WHERE is_banned = FALSE")
+        users = cur.fetchall()
+        for user in users:
+            cur.execute("""
+                INSERT INTO messages (from_user_id, to_user_id, message_type, content)
+                VALUES (1, %s, 'admin_broadcast', %s)
+            """, (user[0], message))
+    
+    elif target == 'specific' and specific_user:
+        cur.execute("SELECT id FROM users WHERE username = %s", (specific_user,))
+        user = cur.fetchone()
+        if user:
+            cur.execute("""
+                INSERT INTO messages (from_user_id, to_user_id, message_type, content)
+                VALUES (1, %s, 'admin_broadcast', %s)
+            """, (user[0], message))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     init_db()
