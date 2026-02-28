@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Admin - eFootball Tournament</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -13,19 +13,32 @@
         }
         body {
             font-family: 'Poppins', sans-serif;
-            background: #0a0f1e;
+            background: linear-gradient(135deg, #0a0f1e 0%, #1a1f2e 100%);
             color: white;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            min-height: 100vh;
         }
         header {
             background: linear-gradient(90deg, #4CAF50, #2196F3);
             padding: 20px;
-            border-radius: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .admin-header {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 16px;
             margin-bottom: 20px;
+            border: 1px solid #4CAF50;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -35,9 +48,32 @@
         .owner-badge {
             background: #FFD700;
             color: #000;
-            padding: 5px 20px;
+            padding: 8px 20px;
             border-radius: 30px;
             font-weight: 700;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #2a3a5a;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFD700;
+        }
+        .stat-label {
+            color: #8892b0;
+            font-size: 12px;
+            margin-top: 5px;
         }
         .tabs {
             display: flex;
@@ -47,18 +83,16 @@
             background: #16213e;
             padding: 10px;
             border-radius: 50px;
+            overflow-x: auto;
         }
         .tab {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 30px;
             cursor: pointer;
             background: #1e2a3a;
             color: #8892b0;
             font-weight: 600;
-            transition: 0.3s;
-            flex: 1;
-            text-align: center;
-            min-width: 100px;
+            white-space: nowrap;
         }
         .tab.active {
             background: #4CAF50;
@@ -70,25 +104,25 @@
         .section.active {
             display: block;
         }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
         .card {
             background: #16213e;
             border-radius: 16px;
             padding: 20px;
+            margin-bottom: 20px;
             border: 1px solid #2a3a5a;
         }
         .card h2 {
             color: #4CAF50;
             margin-bottom: 20px;
-            font-size: 18px;
+            font-size: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
         }
         .pending-item {
             background: #1e2a3a;
@@ -116,15 +150,13 @@
             flex-wrap: wrap;
         }
         .btn {
-            padding: 10px 20px;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             font-size: 14px;
             transition: 0.3s;
-            flex: 1;
-            min-width: 80px;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -145,31 +177,48 @@
             background: #FFC107;
             color: black;
         }
-        .setting-group {
-            background: #1e2a3a;
-            padding: 20px;
-            border-radius: 8px;
+        .input-group {
             margin-bottom: 15px;
         }
-        .setting-row {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-            flex-wrap: wrap;
+        .input-group label {
+            display: block;
+            color: #4CAF50;
+            margin-bottom: 5px;
+            font-weight: 500;
         }
-        input, select {
-            background: #2a3a5a;
-            border: 1px solid #4CAF50;
-            color: white;
+        input, select, textarea {
+            width: 100%;
             padding: 12px;
+            background: #1e2a3a;
+            border: 1px solid #2a3a5a;
+            color: white;
             border-radius: 8px;
             font-family: 'Poppins', sans-serif;
-            flex: 1;
-            min-width: 120px;
         }
-        label {
-            display: block;
-            margin: 15px 0;
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .bracket-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .bracket-row input {
+            flex: 2;
+        }
+        .bracket-row select {
+            flex: 1;
+        }
+        .bracket-row button {
+            flex: 0;
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
         }
         .message-item {
             background: #1e2a3a;
@@ -190,163 +239,206 @@
             color: #8892b0;
             font-size: 12px;
         }
-        .broadcast-area {
-            background: #1e2a3a;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        .broadcast-input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            background: #2a3a5a;
-            border: 1px solid #4CAF50;
-            color: white;
-            border-radius: 8px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
+        .match-item {
             background: #1e2a3a;
             padding: 15px;
             border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .match-players {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .match-score-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .match-score-input input {
+            width: 70px;
             text-align: center;
         }
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
+        .log-item {
+            background: #1e2a3a;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 13px;
+            border-left: 3px solid #4CAF50;
+        }
+        .log-admin {
+            color: #4CAF50;
+        }
+        .log-action {
             color: #FFD700;
         }
-        .stat-label {
-            font-size: 12px;
+        .log-time {
             color: #8892b0;
+            font-size: 11px;
         }
         .loading {
             text-align: center;
             color: #8892b0;
             padding: 20px;
         }
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
+    <header>
+        👑 ADMIN DASHBOARD - eFOOTBALL TOURNAMENT
+    </header>
+
     <div class="container">
-        <header>
+        <!-- Admin Header -->
+        <div class="admin-header">
             <div>
-                <h1>👑 ADMIN DASHBOARD</h1>
-                <p style="color: #8892b0;">Welcome, @awn175 (Owner)</p>
+                <h1 style="color: #4CAF50;">Welcome, @awn175</h1>
+                <p style="color: #8892b0;">You have full control over all tournaments</p>
             </div>
-            <div class="owner-badge">FULL ACCESS</div>
-        </header>
+            <div class="owner-badge">OWNER</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTournaments">0</div>
+                <div class="stat-label">Tournaments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingApprovals">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalMatches">0</div>
+                <div class="stat-label">Matches</div>
+            </div>
+        </div>
 
         <!-- Tabs -->
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('pending')">⏳ PENDING</div>
+            <div class="tab active" onclick="switchTab('dashboard')">📊 DASHBOARD</div>
             <div class="tab" onclick="switchTab('tournaments')">🏆 TOURNAMENTS</div>
+            <div class="tab" onclick="switchTab('approvals')">✅ APPROVALS</div>
+            <div class="tab" onclick="switchTab('matches')">⚔️ MATCHES</div>
             <div class="tab" onclick="switchTab('messages')">💬 MESSAGES</div>
             <div class="tab" onclick="switchTab('broadcast')">📢 BROADCAST</div>
-            <div class="tab" onclick="switchTab('stats')">📊 STATS</div>
+            <div class="tab" onclick="switchTab('users')">👥 USERS</div>
+            <div class="tab" onclick="switchTab('logs')">📋 LOGS</div>
         </div>
 
-        <!-- PENDING SECTION -->
-        <div id="pending-section" class="section active">
-            <div class="card">
-                <h2>⏳ PENDING APPROVALS</h2>
-                <div id="pending-list">
-                    <div class="loading">Loading pending approvals...</div>
+        <!-- DASHBOARD SECTION -->
+        <div id="dashboard-section" class="section active">
+            <div class="grid-2">
+                <div class="card">
+                    <h2>📊 QUICK OVERVIEW</h2>
+                    <div style="background: #1e2a3a; padding: 15px; border-radius: 8px;">
+                        <p style="margin: 10px 0;"><span style="color: #4CAF50;">Active Tournaments:</span> <span id="activeCount" style="float: right;">0</span></p>
+                        <p style="margin: 10px 0;"><span style="color: #4CAF50;">Registered Players:</span> <span id="registeredCount" style="float: right;">0</span></p>
+                        <p style="margin: 10px 0;"><span style="color: #4CAF50;">Matches Completed:</span> <span id="completedMatches" style="float: right;">0</span></p>
+                        <p style="margin: 10px 0;"><span style="color: #4CAF50;">Pending Approvals:</span> <span id="pendingCount" style="float: right;">0</span></p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📈 RECENT ACTIVITY</h2>
+                    <div id="recentActivity">
+                        <p class="loading">Loading...</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- TOURNAMENTS SECTION -->
         <div id="tournaments-section" class="section">
-            <div class="grid">
-                <!-- Knockout Settings -->
-                <div class="card">
-                    <h2>🏆 KNOCKOUT SETTINGS</h2>
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="knockout-enabled" checked> Enable Knockout Tournament
-                        </label>
-                        
-                        <div class="setting-row">
-                            <input type="number" id="knockout-amount-1" placeholder="Amount" value="30">
-                            <select id="knockout-players-1">
+            <div class="card">
+                <h2>➕ CREATE NEW TOURNAMENT</h2>
+                <div class="input-group">
+                    <label>Tournament Name</label>
+                    <input type="text" id="tournamentName" placeholder="e.g., Knockout Championship #1">
+                </div>
+                
+                <div class="input-group">
+                    <label>Tournament Type</label>
+                    <select id="tournamentType">
+                        <option value="knockout">🏆 Knockout</option>
+                        <option value="league">⚽ League</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Entry Brackets (Amount + Max Players)</label>
+                    <div id="brackets-container">
+                        <div class="bracket-row">
+                            <input type="number" class="bracket-amount" placeholder="Amount (Birr)" value="50">
+                            <select class="bracket-players">
                                 <option value="16">16 Players</option>
                                 <option value="32" selected>32 Players</option>
                                 <option value="64">64 Players</option>
                             </select>
-                        </div>
-                        
-                        <div class="setting-row">
-                            <input type="number" id="knockout-amount-2" placeholder="Amount" value="50">
-                            <select id="knockout-players-2">
-                                <option value="16">16 Players</option>
-                                <option value="32">32 Players</option>
-                                <option value="64" selected>64 Players</option>
-                            </select>
-                        </div>
-                        
-                        <div class="setting-row">
-                            <input type="number" id="knockout-amount-3" placeholder="Amount" value="100">
-                            <select id="knockout-players-3">
-                                <option value="16">16 Players</option>
-                                <option value="32">32 Players</option>
-                                <option value="64" selected>64 Players</option>
-                            </select>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 20px;">
-                            <button class="btn btn-green" style="flex: 2;" onclick="saveKnockoutSettings()">💾 SAVE SETTINGS</button>
-                            <button class="btn btn-blue" style="flex: 1;" onclick="startTournament('knockout')">▶️ START</button>
+                            <button onclick="removeBracket(this)">✖</button>
                         </div>
                     </div>
+                    <button class="btn btn-blue" style="margin-top: 10px;" onclick="addBracket()">➕ Add Another Bracket</button>
                 </div>
+                
+                <button class="btn btn-green" style="width: 100%; margin-top: 20px;" onclick="createTournament()">CREATE TOURNAMENT</button>
+            </div>
 
-                <!-- League Settings -->
+            <div class="card">
+                <h2>🏆 ACTIVE TOURNAMENTS</h2>
+                <div id="tournamentsList">
+                    <p class="loading">Loading tournaments...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPROVALS SECTION -->
+        <div id="approvals-section" class="section">
+            <div class="card">
+                <h2>✅ PENDING APPROVALS</h2>
+                <div id="pendingList">
+                    <p class="loading">Loading pending approvals...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MATCHES SECTION -->
+        <div id="matches-section" class="section">
+            <div class="grid-2">
                 <div class="card">
-                    <h2>⚽ LEAGUE SETTINGS</h2>
-                    <div class="setting-group">
-                        <label>
-                            <input type="checkbox" id="league-enabled" checked> Enable League Tournament
-                        </label>
-                        
-                        <div class="setting-row">
-                            <input type="number" id="league-amount-1" placeholder="Amount" value="30">
-                            <select id="league-players-1">
-                                <option value="10">10 Players</option>
-                                <option value="15" selected>15 Players</option>
-                                <option value="20">20 Players</option>
-                            </select>
-                        </div>
-                        
-                        <div class="setting-row">
-                            <input type="number" id="league-amount-2" placeholder="Amount" value="50">
-                            <select id="league-players-2">
-                                <option value="10">10 Players</option>
-                                <option value="15" selected>15 Players</option>
-                                <option value="20">20 Players</option>
-                            </select>
-                        </div>
-                        
-                        <div class="setting-row">
-                            <input type="number" id="league-amount-3" placeholder="Amount" value="100">
-                            <select id="league-players-3">
-                                <option value="10">10 Players</option>
-                                <option value="15" selected>15 Players</option>
-                                <option value="20">20 Players</option>
-                            </select>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 20px;">
-                            <button class="btn btn-green" style="flex: 2;" onclick="saveLeagueSettings()">💾 SAVE SETTINGS</button>
-                            <button class="btn btn-blue" style="flex: 1;" onclick="startTournament('league')">▶️ START</button>
-                        </div>
+                    <h2>⚔️ PENDING MATCHES</h2>
+                    <div id="pendingMatches">
+                        <p class="loading">Loading matches...</p>
                     </div>
                 </div>
+                
+                <div class="card">
+                    <h2>📊 LEAGUE STANDINGS</h2>
+                    <select id="leagueSelect" class="input-group" onchange="loadLeagueStandings()">
+                        <option value="">Select League Tournament</option>
+                    </select>
+                    <div id="leagueStandings" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🏆 KNOCKOUT BRACKETS</h2>
+                <select id="knockoutSelect" class="input-group" onchange="loadKnockoutBracket()">
+                    <option value="">Select Knockout Tournament</option>
+                </select>
+                <div id="knockoutBracket" style="margin-top: 20px; overflow-x: auto;"></div>
             </div>
         </div>
 
@@ -354,8 +446,8 @@
         <div id="messages-section" class="section">
             <div class="card">
                 <h2>💬 USER MESSAGES</h2>
-                <div id="messages-list">
-                    <div class="loading">Loading messages...</div>
+                <div id="messagesList">
+                    <p class="loading">Loading messages...</p>
                 </div>
             </div>
         </div>
@@ -365,50 +457,85 @@
             <div class="card">
                 <h2>📢 SEND BROADCAST</h2>
                 
-                <div class="broadcast-area">
-                    <select id="broadcast-target" class="broadcast-input" onchange="toggleSpecificUser()">
-                        <option value="all">📢 All Players</option>
+                <div class="input-group">
+                    <label>Send To</label>
+                    <select id="broadcastTarget">
+                        <option value="all">📢 All Users</option>
                         <option value="knockout">🏆 Knockout Players Only</option>
                         <option value="league">⚽ League Players Only</option>
                         <option value="specific">👤 Specific User</option>
                     </select>
-                    
-                    <input type="text" id="specific-user" class="broadcast-input" placeholder="@username" style="display: none;">
-                    
-                    <textarea id="broadcast-message" class="broadcast-input" rows="5" placeholder="Type your broadcast message here..."></textarea>
-                    
-                    <button class="btn btn-green" style="width: 100%;" onclick="sendBroadcast()">📨 SEND BROADCAST</button>
+                </div>
+                
+                <div class="input-group" id="specificUserGroup" style="display: none;">
+                    <label>Username (with @)</label>
+                    <input type="text" id="specificUser" placeholder="@username">
+                </div>
+                
+                <div class="input-group">
+                    <label>Message</label>
+                    <textarea id="broadcastMessage" rows="5" placeholder="Type your broadcast message here..."></textarea>
+                </div>
+                
+                <button class="btn btn-green" style="width: 100%;" onclick="sendBroadcast()">📨 SEND BROADCAST</button>
+            </div>
+            
+            <div class="card">
+                <h2>📋 BROADCAST HISTORY</h2>
+                <div id="broadcastHistory">
+                    <p class="loading">Loading...</p>
                 </div>
             </div>
         </div>
 
-        <!-- STATS SECTION -->
-        <div id="stats-section" class="section">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-users">0</div>
-                    <div class="stat-label">Total Users</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="total-registrations">0</div>
-                    <div class="stat-label">Registrations</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="total-approved">0</div>
-                    <div class="stat-label">Approved</div>
+        <!-- USERS SECTION -->
+        <div id="users-section" class="section">
+            <div class="card">
+                <h2>👥 ALL USERS</h2>
+                <input type="text" class="input-group" placeholder="Search users..." onkeyup="searchUsers(this.value)">
+                <div id="usersList" style="margin-top: 20px;">
+                    <p class="loading">Loading users...</p>
                 </div>
             </div>
-            
+        </div>
+
+        <!-- LOGS SECTION -->
+        <div id="logs-section" class="section">
             <div class="card">
-                <h2>📋 RECENT ACTIVITY</h2>
-                <div id="activity-list">
-                    <p style="color: #8892b0;">Loading...</p>
+                <h2>📋 ADMIN ACTION LOGS</h2>
+                <div id="logsList">
+                    <p class="loading">Loading logs...</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- SCREENSHOT MODAL -->
+    <div class="modal" id="screenshotModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; padding: 20px;">
+        <div style="max-width: 500px; margin: 50px auto; background: #16213e; padding: 20px; border-radius: 16px;">
+            <h2 style="color: #4CAF50; margin-bottom: 20px;">📸 Payment Screenshot</h2>
+            <img id="screenshotImg" style="width: 100%; border-radius: 8px;" src="">
+            <button class="btn btn-green" style="width: 100%; margin-top: 20px;" onclick="closeScreenshot()">CLOSE</button>
+        </div>
+    </div>
+
     <script>
+        // Global variables
+        const ADMIN_USERNAME = '@awn175';
+        let currentUserId = null;
+
+        // Initialize
+        async function init() {
+            await loadStats();
+            loadTournamentsList();
+            loadPendingApprovals();
+            loadMatches();
+            loadMessages();
+            loadUsers();
+            loadLogs();
+            loadTournamentSelects();
+        }
+
         // Switch tabs
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -417,249 +544,692 @@
             event.target.classList.add('active');
             document.getElementById(tab + '-section').classList.add('active');
             
-            if (tab === 'pending') loadPending();
+            if (tab === 'dashboard') loadStats();
+            if (tab === 'tournaments') loadTournamentsList();
+            if (tab === 'approvals') loadPendingApprovals();
+            if (tab === 'matches') {
+                loadMatches();
+                loadTournamentSelects();
+            }
             if (tab === 'messages') loadMessages();
-            if (tab === 'stats') loadStats();
+            if (tab === 'users') loadUsers();
+            if (tab === 'logs') loadLogs();
         }
 
         // Toggle specific user input
-        function toggleSpecificUser() {
-            const target = document.getElementById('broadcast-target').value;
-            const specificUser = document.getElementById('specific-user');
-            specificUser.style.display = target === 'specific' ? 'block' : 'none';
+        document.getElementById('broadcastTarget').addEventListener('change', function() {
+            const specificGroup = document.getElementById('specificUserGroup');
+            specificGroup.style.display = this.value === 'specific' ? 'block' : 'none';
+        });
+
+        // Load stats
+        async function loadStats() {
+            try {
+                // Get tournaments
+                const tourRes = await fetch('/api/tournaments');
+                const tournaments = await tourRes.json();
+                
+                // Get pending count
+                const pendRes = await fetch('/api/admin/pending?admin=' + ADMIN_USERNAME);
+                const pending = await pendRes.json();
+                
+                // Update stats
+                document.getElementById('totalTournaments').textContent = tournaments.length;
+                document.getElementById('pendingApprovals').textContent = pending.length;
+                document.getElementById('pendingCount').textContent = pending.length;
+                
+                // Count active tournaments
+                const active = tournaments.filter(t => t.status !== 'completed').length;
+                document.getElementById('activeCount').textContent = active;
+                
+                // Count registered players
+                let registered = 0;
+                tournaments.forEach(t => {
+                    registered += t.players.length;
+                });
+                document.getElementById('registeredCount').textContent = registered;
+                
+                // Recent activity
+                let activityHtml = '';
+                const recent = [...pending].slice(0, 5);
+                if (recent.length === 0) {
+                    activityHtml = '<p style="color: #8892b0;">No recent activity</p>';
+                } else {
+                    recent.forEach(r => {
+                        activityHtml += `
+                            <div class="log-item">
+                                <span class="log-admin">${r.username}</span>
+                                <span class="log-action">registered for ${r.tournament}</span>
+                                <div class="log-time">${new Date(r.date).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('recentActivity').innerHTML = activityHtml;
+                
+            } catch (e) {
+                console.error('Error loading stats:', e);
+            }
         }
 
-        // Load pending approvals
-        async function loadPending() {
+        // Add bracket row
+        function addBracket() {
+            const container = document.getElementById('brackets-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'bracket-row';
+            newRow.innerHTML = `
+                <input type="number" class="bracket-amount" placeholder="Amount (Birr)" value="30">
+                <select class="bracket-players">
+                    <option value="16">16 Players</option>
+                    <option value="32">32 Players</option>
+                    <option value="64">64 Players</option>
+                </select>
+                <button onclick="removeBracket(this)">✖</button>
+            `;
+            container.appendChild(newRow);
+        }
+
+        // Remove bracket row
+        function removeBracket(btn) {
+            const container = document.getElementById('brackets-container');
+            if (container.children.length > 1) {
+                btn.parentElement.remove();
+            }
+        }
+
+        // Create tournament
+        async function createTournament() {
+            const name = document.getElementById('tournamentName').value;
+            const type = document.getElementById('tournamentType').value;
+            
+            if (!name) {
+                alert('Please enter tournament name');
+                return;
+            }
+            
+            // Get brackets
+            const amountInputs = document.querySelectorAll('.bracket-amount');
+            const playersSelects = document.querySelectorAll('.bracket-players');
+            
+            const brackets = [];
+            for (let i = 0; i < amountInputs.length; i++) {
+                brackets.push({
+                    amount: parseInt(amountInputs[i].value),
+                    max_players: parseInt(playersSelects[i].value)
+                });
+            }
+            
             try {
-                const res = await fetch('/api/admin/pending?admin=@awn175');
+                const res = await fetch('/api/admin/create_tournament', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: ADMIN_USERNAME,
+                        name: name,
+                        type: type,
+                        brackets: brackets
+                    })
+                });
+                
                 const data = await res.json();
                 
-                let html = '';
-                if (data.length === 0) {
-                    html = '<p style="color: #8892b0; text-align: center;">No pending approvals</p>';
+                if (data.success) {
+                    alert('✅ Tournament created successfully!');
+                    document.getElementById('tournamentName').value = '';
+                    loadTournamentsList();
                 } else {
-                    data.forEach(p => {
+                    alert('Error: ' + data.message);
+                }
+                
+            } catch (e) {
+                alert('Error creating tournament: ' + e.message);
+            }
+        }
+
+        // Load tournaments list
+        async function loadTournamentsList() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let html = '';
+                
+                if (tournaments.length === 0) {
+                    html = '<p style="color: #8892b0;">No tournaments yet</p>';
+                } else {
+                    tournaments.forEach(t => {
+                        const statusColor = t.status === 'not_started' ? '#FFC107' : 
+                                           t.status === 'registration' ? '#4CAF50' : '#2196F3';
+                        
                         html += `
                             <div class="pending-item">
                                 <div class="pending-header">
-                                    <span class="username">@${p.username}</span>
-                                    <span class="amount">${p.amount} Birr</span>
+                                    <span class="username">${t.name}</span>
+                                    <span style="color: ${statusColor};">${t.status}</span>
                                 </div>
-                                <p style="color: #8892b0;">Tournament: ${p.tournament}</p>
-                                <p style="color: #8892b0;">Date: ${p.date}</p>
+                                <p style="color: #8892b0;">Type: ${t.type}</p>
+                                <p style="color: #8892b0;">Brackets: ${t.brackets.map(b => b.amount + ' Birr').join(', ')}</p>
+                                <p style="color: #8892b0;">Players: ${t.players.length}</p>
                                 <div class="pending-actions">
-                                    <button class="btn btn-green" onclick="approvePayment(${p.id})">✅ Approve</button>
-                                    <button class="btn btn-red" onclick="rejectPayment(${p.id})">❌ Reject</button>
-                                    <button class="btn btn-blue" onclick="viewScreenshot('${p.screenshot}')">📸 View</button>
+                                    ${t.status === 'not_started' ? 
+                                        `<button class="btn btn-green" onclick="startTournament(${t.id})">▶️ START</button>` : ''}
+                                    <button class="btn btn-red" onclick="deleteTournament(${t.id})">🗑️ DELETE</button>
                                 </div>
                             </div>
                         `;
                     });
                 }
-                document.getElementById('pending-list').innerHTML = html;
+                
+                document.getElementById('tournamentsList').innerHTML = html;
+                
             } catch (e) {
-                document.getElementById('pending-list').innerHTML = '<p style="color: #f44336;">Error loading</p>';
+                console.error('Error loading tournaments:', e);
+                document.getElementById('tournamentsList').innerHTML = '<p style="color: #f44336;">Error loading tournaments</p>';
+            }
+        }
+
+        // Start tournament
+        async function startTournament(tournamentId) {
+            if (!confirm('Start this tournament? Users can now register.')) return;
+            
+            try {
+                const res = await fetch('/api/admin/start_tournament', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: ADMIN_USERNAME,
+                        tournament_id: tournamentId
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Tournament started!');
+                    loadTournamentsList();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+                
+            } catch (e) {
+                alert('Error starting tournament: ' + e.message);
+            }
+        }
+
+        // Delete tournament
+        async function deleteTournament(tournamentId) {
+            if (!confirm('Delete this tournament? This action cannot be undone.')) return;
+            alert('Delete functionality coming soon');
+        }
+
+        // Load pending approvals
+        async function loadPendingApprovals() {
+            try {
+                const res = await fetch('/api/admin/pending?admin=' + ADMIN_USERNAME);
+                const pending = await res.json();
+                
+                let html = '';
+                
+                if (pending.length === 0) {
+                    html = '<p style="color: #8892b0;">No pending approvals</p>';
+                } else {
+                    pending.forEach(p => {
+                        html += `
+                            <div class="pending-item">
+                                <div class="pending-header">
+                                    <span class="username">${p.username}</span>
+                                    <span class="amount">${p.amount} Birr</span>
+                                </div>
+                                <p style="color: #8892b0;">Tournament: ${p.tournament}</p>
+                                <p style="color: #8892b0;">Date: ${new Date(p.date).toLocaleString()}</p>
+                                <div class="pending-actions">
+                                    <button class="btn btn-green" onclick="approvePayment(${p.id})">✅ APPROVE</button>
+                                    <button class="btn btn-red" onclick="rejectPayment(${p.id})">❌ REJECT</button>
+                                    <button class="btn btn-blue" onclick="viewScreenshot('${p.screenshot}')">📸 VIEW</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('pendingList').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading pending:', e);
+                document.getElementById('pendingList').innerHTML = '<p style="color: #f44336;">Error loading pending</p>';
             }
         }
 
         // Approve payment
-        async function approvePayment(id) {
-            if (!confirm('Approve this payment?')) return;
+        async function approvePayment(regId) {
+            if (!confirm('Approve this registration?')) return;
             
-            const res = await fetch('/api/admin/process_registration', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin: '@awn175',
-                    registration_id: id,
-                    action: 'approve'
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('✅ Payment approved!');
-                loadPending();
+            try {
+                const res = await fetch('/api/admin/process_registration', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: ADMIN_USERNAME,
+                        registration_id: regId,
+                        action: 'approve'
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Registration approved!');
+                    loadPendingApprovals();
+                    loadStats();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+                
+            } catch (e) {
+                alert('Error approving: ' + e.message);
             }
         }
 
         // Reject payment
-        async function rejectPayment(id) {
+        async function rejectPayment(regId) {
             const reason = prompt('Reason for rejection:');
             if (!reason) return;
             
-            const res = await fetch('/api/admin/process_registration', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin: '@awn175',
-                    registration_id: id,
-                    action: 'reject',
-                    reason: reason
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('❌ Payment rejected');
-                loadPending();
+            try {
+                const res = await fetch('/api/admin/process_registration', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: ADMIN_USERNAME,
+                        registration_id: regId,
+                        action: 'reject',
+                        reason: reason
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('❌ Registration rejected!');
+                    loadPendingApprovals();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+                
+            } catch (e) {
+                alert('Error rejecting: ' + e.message);
             }
         }
 
         // View screenshot
         function viewScreenshot(path) {
-            window.open(path, '_blank');
+            document.getElementById('screenshotImg').src = path;
+            document.getElementById('screenshotModal').style.display = 'block';
+        }
+
+        // Close screenshot
+        function closeScreenshot() {
+            document.getElementById('screenshotModal').style.display = 'none';
+        }
+
+        // Load matches
+        async function loadMatches() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let html = '';
+                let hasMatches = false;
+                
+                tournaments.forEach(t => {
+                    // For demo, show placeholder
+                    if (t.status === 'registration' || t.status === 'in_progress') {
+                        hasMatches = true;
+                        html += `
+                            <div class="match-item">
+                                <div class="match-players">
+                                    <span class="username">${t.name}</span>
+                                    <span style="color: #8892b0;">Round 1</span>
+                                </div>
+                                <p style="color: #8892b0;">${t.players.length} players registered</p>
+                                <p style="color: #FFC107;">Generate fixtures when tournament is full</p>
+                                ${t.players.length >= 2 ? 
+                                    `<button class="btn btn-blue" onclick="alert('Generate fixtures for ${t.name}')">🎲 GENERATE FIXTURES</button>` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                
+                if (!hasMatches) {
+                    html = '<p style="color: #8892b0;">No active matches</p>';
+                }
+                
+                document.getElementById('pendingMatches').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading matches:', e);
+                document.getElementById('pendingMatches').innerHTML = '<p style="color: #f44336;">Error loading matches</p>';
+            }
+        }
+
+        // Load tournament selects for standings
+        async function loadTournamentSelects() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let leagueOptions = '<option value="">Select League Tournament</option>';
+                let knockoutOptions = '<option value="">Select Knockout Tournament</option>';
+                
+                tournaments.forEach(t => {
+                    if (t.type === 'league') {
+                        leagueOptions += `<option value="${t.id}">${t.name}</option>`;
+                    } else {
+                        knockoutOptions += `<option value="${t.id}">${t.name}</option>`;
+                    }
+                });
+                
+                document.getElementById('leagueSelect').innerHTML = leagueOptions;
+                document.getElementById('knockoutSelect').innerHTML = knockoutOptions;
+                
+            } catch (e) {
+                console.error('Error loading selects:', e);
+            }
+        }
+
+        // Load league standings
+        async function loadLeagueStandings() {
+            const tournamentId = document.getElementById('leagueSelect').value;
+            if (!tournamentId) return;
+            
+            try {
+                const res = await fetch(`/api/standings/${tournamentId}`);
+                const standings = await res.json();
+                
+                let html = '<div style="background: #1e2a3a; padding: 15px; border-radius: 8px;">';
+                html += `
+                    <div style="display: grid; grid-template-columns: 30px 1fr 40px 40px 40px 40px 40px 40px 40px 50px; padding: 10px; font-weight: 600; color: #4CAF50;">
+                        <span>#</span>
+                        <span>Player</span>
+                        <span>P</span>
+                        <span>W</span>
+                        <span>D</span>
+                        <span>L</span>
+                        <span>GF</span>
+                        <span>GA</span>
+                        <span>GD</span>
+                        <span>Pts</span>
+                    </div>
+                `;
+                
+                standings.forEach((s, index) => {
+                    html += `
+                        <div style="display: grid; grid-template-columns: 30px 1fr 40px 40px 40px 40px 40px 40px 40px 50px; padding: 8px; border-top: 1px solid #2a3a5a;">
+                            <span>${index + 1}</span>
+                            <span style="color: #4CAF50;">${s.username}</span>
+                            <span>${s.played}</span>
+                            <span>${s.won}</span>
+                            <span>${s.drawn}</span>
+                            <span>${s.lost}</span>
+                            <span>${s.gf}</span>
+                            <span>${s.ga}</span>
+                            <span>${s.gd}</span>
+                            <span style="color: #FFD700; font-weight: 700;">${s.points}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                document.getElementById('leagueStandings').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading standings:', e);
+                document.getElementById('leagueStandings').innerHTML = '<p style="color: #f44336;">Error loading standings</p>';
+            }
+        }
+
+        // Load knockout bracket
+        async function loadKnockoutBracket() {
+            const tournamentId = document.getElementById('knockoutSelect').value;
+            if (!tournamentId) return;
+            
+            try {
+                const res = await fetch(`/api/bracket/${tournamentId}`);
+                const rounds = await res.json();
+                
+                let html = '<div style="display: flex; gap: 20px; overflow-x: auto;">';
+                
+                // Sort rounds
+                const roundNumbers = Object.keys(rounds).sort((a, b) => a - b);
+                
+                roundNumbers.forEach(round => {
+                    html += `<div style="min-width: 250px;">`;
+                    html += `<h3 style="color: #4CAF50; text-align: center;">Round ${round}</h3>`;
+                    
+                    rounds[round].forEach(match => {
+                        html += `
+                            <div style="background: #1e2a3a; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="color: #4CAF50;">${match.player1 || 'TBD'}</span>
+                                    <span style="color: #FFD700;">${match.score1} - ${match.score2}</span>
+                                    <span style="color: #4CAF50;">${match.player2 || 'TBD'}</span>
+                                </div>
+                                ${match.winner ? `<div style="text-align: center; color: #4CAF50;">Winner: ${match.winner}</div>` : ''}
+                                <div style="margin-top: 10px; display: flex; gap: 5px;">
+                                    <input type="number" id="score1_${match.id}" placeholder="Score 1" style="width: 60px;">
+                                    <input type="number" id="score2_${match.id}" placeholder="Score 2" style="width: 60px;">
+                                    <button class="btn btn-green" style="flex: 1;" onclick="enterResult(${match.id})">ENTER</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                document.getElementById('knockoutBracket').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading bracket:', e);
+                document.getElementById('knockoutBracket').innerHTML = '<p style="color: #f44336;">Error loading bracket</p>';
+            }
+        }
+
+        // Enter match result
+        async function enterResult(matchId) {
+            const score1 = document.getElementById(`score1_${matchId}`).value;
+            const score2 = document.getElementById(`score2_${matchId}`).value;
+            
+            if (!score1 || !score2) {
+                alert('Please enter both scores');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/admin/enter_result', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: ADMIN_USERNAME,
+                        match_id: matchId,
+                        score1: parseInt(score1),
+                        score2: parseInt(score2)
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Result entered!');
+                    loadKnockoutBracket();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+                
+            } catch (e) {
+                alert('Error entering result: ' + e.message);
+            }
         }
 
         // Load messages
         async function loadMessages() {
             try {
-                const res = await fetch('/api/admin/messages?admin=@awn175');
-                const data = await res.json();
+                const res = await fetch('/api/admin/messages?admin=' + ADMIN_USERNAME);
+                const messages = await res.json();
                 
                 let html = '';
-                if (data.length === 0) {
-                    html = '<p style="color: #8892b0; text-align: center;">No messages</p>';
+                
+                if (messages.length === 0) {
+                    html = '<p style="color: #8892b0;">No messages</p>';
                 } else {
-                    data.forEach(m => {
+                    messages.forEach(m => {
                         html += `
                             <div class="message-item">
-                                <div class="message-user">@${m.username}</div>
+                                <div class="message-user">${m.username}</div>
                                 <div class="message-text">${m.message}</div>
-                                <div class="message-date">${m.date}</div>
+                                <div class="message-date">${new Date(m.date).toLocaleString()}</div>
                             </div>
                         `;
                     });
                 }
-                document.getElementById('messages-list').innerHTML = html;
+                
+                document.getElementById('messagesList').innerHTML = html;
+                
             } catch (e) {
-                document.getElementById('messages-list').innerHTML = '<p style="color: #f44336;">Error loading</p>';
-            }
-        }
-
-        // Save knockout settings
-        async function saveKnockoutSettings() {
-            const settings = [
-                {
-                    amount: parseInt(document.getElementById('knockout-amount-1').value),
-                    max_players: parseInt(document.getElementById('knockout-players-1').value)
-                },
-                {
-                    amount: parseInt(document.getElementById('knockout-amount-2').value),
-                    max_players: parseInt(document.getElementById('knockout-players-2').value)
-                },
-                {
-                    amount: parseInt(document.getElementById('knockout-amount-3').value),
-                    max_players: parseInt(document.getElementById('knockout-players-3').value)
-                }
-            ];
-            
-            const res = await fetch('/api/admin/update_settings', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin: '@awn175',
-                    type: 'knockout',
-                    settings: settings
-                })
-            });
-            
-            const data = await res.json();
-            if (data.success) {
-                alert('✅ Knockout settings saved!');
-            }
-        }
-
-        // Save league settings
-        async function saveLeagueSettings() {
-            const settings = [
-                {
-                    amount: parseInt(document.getElementById('league-amount-1').value),
-                    max_players: parseInt(document.getElementById('league-players-1').value)
-                },
-                {
-                    amount: parseInt(document.getElementById('league-amount-2').value),
-                    max_players: parseInt(document.getElementById('league-players-2').value)
-                },
-                {
-                    amount: parseInt(document.getElementById('league-amount-3').value),
-                    max_players: parseInt(document.getElementById('league-players-3').value)
-                }
-            ];
-            
-            const res = await fetch('/api/admin/update_settings', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin: '@awn175',
-                    type: 'league',
-                    settings: settings
-                })
-            });
-            
-            const data = await res.json();
-            if (data.success) {
-                alert('✅ League settings saved!');
-            }
-        }
-
-        // Start tournament
-        async function startTournament(type) {
-            if (!confirm(`Start ${type} tournament?`)) return;
-            
-            const res = await fetch('/api/admin/start_tournament', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin: '@awn175',
-                    type: type
-                })
-            });
-            
-            const data = await res.json();
-            if (data.success) {
-                alert(`✅ ${type} tournament started!`);
+                console.error('Error loading messages:', e);
+                document.getElementById('messagesList').innerHTML = '<p style="color: #f44336;">Error loading messages</p>';
             }
         }
 
         // Send broadcast
         async function sendBroadcast() {
-            const target = document.getElementById('broadcast-target').value;
-            const specificUser = document.getElementById('specific-user').value;
-            const message = document.getElementById('broadcast-message').value;
+            const target = document.getElementById('broadcastTarget').value;
+            const specificUser = document.getElementById('specificUser').value;
+            const message = document.getElementById('broadcastMessage').value;
             
             if (!message) {
                 alert('Please enter a message');
                 return;
             }
             
-            const res = await fetch('/api/admin/broadcast', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin: '@awn175',
-                    target: target,
-                    specific_user: specificUser,
-                    message: message
-                })
-            });
+            if (target === 'specific' && !specificUser) {
+                alert('Please enter a username');
+                return;
+            }
             
-            const data = await res.json();
-            if (data.success) {
-                alert('📢 Broadcast sent!');
-                document.getElementById('broadcast-message').value = '';
+            try {
+                const res = await fetch('/api/admin/broadcast', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: ADMIN_USERNAME,
+                        target: target,
+                        specific_user: specificUser,
+                        message: message
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('📢 Broadcast sent!');
+                    document.getElementById('broadcastMessage').value = '';
+                    document.getElementById('specificUser').value = '';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+                
+            } catch (e) {
+                alert('Error sending broadcast: ' + e.message);
             }
         }
 
-        // Load stats
-        async function loadStats() {
-            // This would need a stats endpoint
-            document.getElementById('total-users').textContent = '0';
-            document.getElementById('total-registrations').textContent = '0';
-            document.getElementById('total-approved').textContent = '0';
+        // Load users
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                // Extract unique users from registrations
+                const users = new Map();
+                
+                tournaments.forEach(t => {
+                    t.players.forEach(p => {
+                        users.set(p.username, {
+                            username: p.username,
+                            tournaments: [t.name],
+                            registered: true
+                        });
+                    });
+                });
+                
+                let html = '';
+                
+                if (users.size === 0) {
+                    html = '<p style="color: #8892b0;">No users yet</p>';
+                } else {
+                    users.forEach((user, username) => {
+                        html += `
+                            <div class="pending-item">
+                                <div class="pending-header">
+                                    <span class="username">${username}</span>
+                                </div>
+                                <p style="color: #8892b0;">Tournaments: ${user.tournaments.join(', ')}</p>
+                                <div class="pending-actions">
+                                    <button class="btn btn-red" onclick="banUser('${username}')">🚫 BAN</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('usersList').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading users:', e);
+                document.getElementById('usersList').innerHTML = '<p style="color: #f44336;">Error loading users</p>';
+            }
         }
 
-        // Load initial data
-        loadPending();
+        // Search users
+        function searchUsers(query) {
+            // Implement search
+        }
+
+        // Ban user
+        function banUser(username) {
+            if (confirm(`Ban ${username}?`)) {
+                alert(`User ${username} banned`);
+            }
+        }
+
+        // Load logs
+        async function loadLogs() {
+            // For demo, show placeholder
+            const logs = [
+                {admin: '@awn175', action: 'created tournament', details: 'Knockout Championship', time: new Date()},
+                {admin: '@awn175', action: 'approved registration', details: '@player1 - 50 Birr', time: new Date()},
+                {admin: '@awn175', action: 'entered result', details: 'Match #5: 3-1', time: new Date()}
+            ];
+            
+            let html = '';
+            logs.forEach(log => {
+                html += `
+                    <div class="log-item">
+                        <span class="log-admin">${log.admin}</span>
+                        <span class="log-action">${log.action}</span>
+                        <div>${log.details}</div>
+                        <div class="log-time">${log.time.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('logsList').innerHTML = html;
+        }
+
+        // Initialize on load
+        init();
     </script>
 </body>
-</html>
+    </html>
