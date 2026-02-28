@@ -37,6 +37,8 @@ def init_db():
         conn = get_db()
         cur = conn.cursor()
         
+        print("📦 Creating database tables...")
+        
         # Users table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -49,6 +51,7 @@ def init_db():
                 joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        print("✅ users table created")
         
         # Tournaments table
         cur.execute("""
@@ -60,6 +63,7 @@ def init_db():
                 created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        print("✅ tournaments table created")
         
         # Tournament settings
         cur.execute("""
@@ -72,6 +76,7 @@ def init_db():
                 is_active BOOLEAN DEFAULT TRUE
             )
         """)
+        print("✅ tournament_settings table created")
         
         # Registrations
         cur.execute("""
@@ -89,6 +94,7 @@ def init_db():
                 approved_by VARCHAR(255)
             )
         """)
+        print("✅ registrations table created")
         
         # Messages
         cur.execute("""
@@ -102,6 +108,7 @@ def init_db():
                 is_read BOOLEAN DEFAULT FALSE
             )
         """)
+        print("✅ messages table created")
         
         # Insert owner
         cur.execute("""
@@ -109,12 +116,15 @@ def init_db():
             VALUES (0, '@awn175', 'Owner', TRUE) 
             ON CONFLICT (telegram_id) DO NOTHING
         """)
+        print("✅ owner user created")
         
         # Check if tournaments exist
         cur.execute("SELECT COUNT(*) FROM tournaments")
         count = cur.fetchone()[0]
         
         if count == 0:
+            print("🏆 Creating default tournaments...")
+            
             # Create Knockout tournament
             cur.execute("""
                 INSERT INTO tournaments (name, type, status) 
@@ -152,7 +162,7 @@ def init_db():
         conn.commit()
         cur.close()
         conn.close()
-        print("✅ Database initialized successfully!")
+        print("✅ All database tables ready!")
         
     except Exception as e:
         print(f"❌ Database init error: {str(e)}")
@@ -603,9 +613,12 @@ def send_broadcast():
         print(f"❌ Broadcast error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+# Initialize database on startup
+print("🚀 Initializing database...")
+init_db()
+
 if __name__ == '__main__':
     try:
-        init_db()
         port = int(os.environ.get('PORT', 5000))
         print(f"🚀 Server starting on port {port}")
         app.run(host='0.0.0.0', port=port)
