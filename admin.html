@@ -6,7 +6,7 @@
     <title>Admin - eFootball Tournament</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ALL YOUR PREVIOUS STYLES HERE - KEEP THEM EXACTLY AS THEY WERE */
+        /* ALL YOUR EXISTING STYLES HERE - KEEP THEM EXACTLY THE SAME */
         * {
             margin: 0;
             padding: 0;
@@ -36,27 +36,19 @@
         }
         
         /* Login Page Styles */
-        .login-page {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
         .login-container {
-            background: #16213e;
-            padding: 40px 30px;
-            border-radius: 20px;
-            border: 2px solid #4CAF50;
-            width: 100%;
             max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin: 50px auto;
+            background: #16213e;
+            padding: 30px 20px;
+            border-radius: 20px;
+            border: 1px solid #4CAF50;
         }
         .login-container h2 {
             color: #4CAF50;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 28px;
+            margin-bottom: 25px;
+            font-size: 24px;
         }
         .login-input {
             width: 100%;
@@ -67,20 +59,19 @@
             color: white;
             border-radius: 10px;
             font-family: 'Poppins', sans-serif;
-            font-size: 16px;
+            font-size: 15px;
         }
         .login-btn {
             width: 100%;
-            padding: 16px;
+            padding: 15px;
             background: #4CAF50;
             color: white;
             border: none;
             border-radius: 10px;
             font-weight: 600;
-            font-size: 18px;
+            font-size: 16px;
             margin-top: 20px;
             cursor: pointer;
-            transition: 0.3s;
         }
         .error-message {
             color: #f44336;
@@ -88,14 +79,8 @@
             margin-top: 15px;
             font-size: 14px;
         }
-        .info-text {
-            color: #8892b0;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 13px;
-        }
         
-        /* Dashboard Styles - ALL YOUR PREVIOUS DASHBOARD STYLES */
+        /* Admin Panel Styles */
         .admin-header {
             background: #16213e;
             padding: 20px;
@@ -154,6 +139,7 @@
             padding: 8px;
             border-radius: 30px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .tab {
             padding: 10px 16px;
@@ -186,6 +172,9 @@
             color: #4CAF50;
             margin-bottom: 16px;
             font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .grid-2 {
             display: grid;
@@ -197,6 +186,8 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+        
+        /* Pending Approvals */
         .pending-item {
             background: #1e2a3a;
             padding: 15px;
@@ -235,6 +226,9 @@
             font-size: 13px;
             transition: 0.3s;
         }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
         .btn-green {
             background: #4CAF50;
             color: white;
@@ -251,47 +245,8 @@
             background: #FFC107;
             color: black;
         }
-        .input-group {
-            margin-bottom: 16px;
-        }
-        .input-group label {
-            display: block;
-            color: #8892b0;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 14px;
-            background: #1e2a3a;
-            border: 1px solid #2a3a5a;
-            color: white;
-            border-radius: 10px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
-        }
-        .bracket-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        .bracket-row input {
-            flex: 2;
-        }
-        .bracket-row select {
-            flex: 1;
-        }
-        .bracket-row button {
-            flex: 0;
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+        
+        /* Screenshot Modal */
         .modal {
             display: none;
             position: fixed;
@@ -317,12 +272,59 @@
             max-width: 500px;
             border: 1px solid #4CAF50;
         }
+        .modal-content h2 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
         .screenshot-img {
             width: 100%;
             border-radius: 12px;
             margin-bottom: 20px;
             border: 2px solid #4CAF50;
         }
+        
+        /* Tournament Creation */
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            color: #8892b0;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            background: #1e2a3a;
+            border: 1px solid #2a3a5a;
+            color: white;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+        }
+        .bracket-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .bracket-row input[type="number"] {
+            flex: 1;
+        }
+        .bracket-row button {
+            flex: 0;
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        /* League Standings - Scrollable */
         .standings-wrapper {
             overflow-x: auto;
             overflow-y: auto;
@@ -352,6 +354,11 @@
             text-align: center;
             border-bottom: 1px solid #2a3a5a;
         }
+        .standings-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Messages */
         .message-item {
             background: #1e2a3a;
             padding: 15px;
@@ -374,14 +381,68 @@
             color: #8892b0;
             font-size: 11px;
         }
-        .logout-btn {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 10px 20px;
+        
+        /* Matches */
+        .match-item {
+            background: #1e2a3a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        .match-players {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .match-score-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .match-score-input input {
+            width: 70px;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        /* Logs */
+        .log-item {
+            background: #1e2a3a;
+            padding: 12px;
             border-radius: 8px;
-            cursor: pointer;
+            margin-bottom: 6px;
+            font-size: 12px;
+            border-left: 3px solid #4CAF50;
+        }
+        .log-admin {
+            color: #4CAF50;
             font-weight: 600;
+        }
+        .log-action {
+            color: #FFD700;
+        }
+        .log-time {
+            color: #8892b0;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+        
+        /* Users List */
+        .users-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .user-item {
+            background: #1e2a3a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .loading {
             text-align: center;
@@ -392,28 +453,22 @@
     </style>
 </head>
 <body>
-    <!-- Login Page -->
-    <div id="loginPage" class="login-page">
-        <div class="login-container">
-            <h2>👑 ADMIN LOGIN</h2>
-            <input type="text" id="username" class="login-input" placeholder="Username">
-            <input type="password" id="password" class="login-input" placeholder="Password">
-            <button class="login-btn" onclick="handleLogin()">LOGIN</button>
+    <header>
+        👑 ADMIN DASHBOARD - eFOOTBALL TOURNAMENT
+    </header>
+
+    <div class="container">
+        <!-- Admin Login Page -->
+        <div id="loginPage" class="login-container">
+            <h2>🔐 ADMIN LOGIN</h2>
+            <input type="text" id="adminUsername" class="login-input" placeholder="Username" value="">
+            <input type="password" id="adminPassword" class="login-input" placeholder="Password" value="">
+            <button class="login-btn" onclick="adminLogin()">LOGIN</button>
             <div id="loginError" class="error-message"></div>
-            <div class="info-text">
-                <div>👑 Owner: awnowner</div>
-                <div>👤 Admin: awnadmin</div>
-            </div>
         </div>
-    </div>
 
-    <!-- Dashboard Page -->
-    <div id="dashboardPage" style="display: none;">
-        <header>
-            👑 ADMIN DASHBOARD - eFOOTBALL TOURNAMENT
-        </header>
-
-        <div class="container">
+        <!-- Admin Dashboard (Hidden until login) -->
+        <div id="adminDashboard" style="display: none;">
             <!-- Admin Header -->
             <div class="admin-header">
                 <div>
@@ -422,7 +477,7 @@
                 </div>
                 <div>
                     <span id="roleBadge" class="role-badge"></span>
-                    <button class="logout-btn" style="margin-left: 10px;" onclick="logout()">LOGOUT</button>
+                    <button class="btn btn-red" style="margin-left: 10px;" onclick="adminLogout()">LOGOUT</button>
                 </div>
             </div>
 
@@ -492,9 +547,6 @@
             <div id="tournaments-section" class="section">
                 <div class="card">
                     <h2>➕ CREATE NEW TOURNAMENT</h2>
-                    <div id="ownerOnlyMessage" style="background: #FFC107; color: #000; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none;">
-                        ⚠️ Only owner can create tournaments
-                    </div>
                     <div class="input-group">
                         <label>Tournament Name</label>
                         <input type="text" id="tournamentName" placeholder="e.g., Knockout Championship #1">
@@ -513,24 +565,20 @@
                         <div id="brackets-container">
                             <div class="bracket-row">
                                 <input type="number" class="bracket-amount" placeholder="Amount (Birr)" value="50">
-                                <select class="bracket-players">
-                                    <option value="16">16 Players</option>
-                                    <option value="32" selected>32 Players</option>
-                                    <option value="64">64 Players</option>
-                                </select>
+                                <input type="number" class="bracket-players" placeholder="Max Players" value="32">
                                 <button onclick="removeBracket(this)">✖</button>
                             </div>
                         </div>
-                        <button class="btn btn-blue" style="margin-top: 10px; width: 100%;" onclick="addBracket()">➕ Add Another Bracket</button>
+                        <button class="btn btn-blue" style="margin-top: 10px; width: 100%;" onclick="addBracket()">➕ Add Bracket</button>
                     </div>
                     
-                    <button class="btn btn-green" style="width: 100%; margin-top: 20px;" id="createTournamentBtn" onclick="createTournament()">CREATE TOURNAMENT</button>
+                    <button class="btn btn-green" style="width: 100%; margin-top: 10px;" onclick="createTournament()">CREATE TOURNAMENT</button>
                 </div>
 
                 <div class="card">
                     <h2>🏆 ACTIVE TOURNAMENTS</h2>
                     <div id="tournamentsList" style="max-height: 400px; overflow-y: auto;">
-                        <p class="loading">Loading tournaments...</p>
+                        <p class="loading">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -540,7 +588,7 @@
                 <div class="card">
                     <h2>✅ PENDING APPROVALS</h2>
                     <div id="pendingList" style="max-height: 500px; overflow-y: auto;">
-                        <p class="loading">Loading pending approvals...</p>
+                        <p class="loading">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -551,14 +599,14 @@
                     <div class="card">
                         <h2>⚔️ PENDING MATCHES</h2>
                         <div id="pendingMatches" style="max-height: 400px; overflow-y: auto;">
-                            <p class="loading">Loading matches...</p>
+                            <p class="loading">Loading...</p>
                         </div>
                     </div>
                     
                     <div class="card">
                         <h2>📊 LEAGUE STANDINGS</h2>
                         <select id="leagueSelect" class="input-group" onchange="loadLeagueStandings()" style="margin-bottom: 16px;">
-                            <option value="">Select League Tournament</option>
+                            <option value="">Select League</option>
                         </select>
                         <div class="standings-wrapper">
                             <table class="standings-table" id="leagueStandings">
@@ -574,7 +622,7 @@
                 <div class="card">
                     <h2>🏆 KNOCKOUT BRACKETS</h2>
                     <select id="knockoutSelect" class="input-group" onchange="loadKnockoutBracket()" style="margin-bottom: 16px;">
-                        <option value="">Select Knockout Tournament</option>
+                        <option value="">Select Knockout</option>
                     </select>
                     <div id="knockoutBracket" style="overflow-x: auto;"></div>
                 </div>
@@ -585,7 +633,7 @@
                 <div class="card">
                     <h2>💬 USER MESSAGES</h2>
                     <div id="messagesList" style="max-height: 500px; overflow-y: auto;">
-                        <p class="loading">Loading messages...</p>
+                        <p class="loading">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -599,8 +647,8 @@
                         <label>Send To</label>
                         <select id="broadcastTarget" onchange="toggleSpecificUser()">
                             <option value="all">📢 All Users</option>
-                            <option value="knockout">🏆 Knockout Players Only</option>
-                            <option value="league">⚽ League Players Only</option>
+                            <option value="knockout">🏆 Knockout Players</option>
+                            <option value="league">⚽ League Players</option>
                             <option value="specific">👤 Specific User</option>
                         </select>
                     </div>
@@ -612,10 +660,10 @@
                     
                     <div class="input-group">
                         <label>Message</label>
-                        <textarea id="broadcastMessage" rows="5" placeholder="Type your broadcast message here..."></textarea>
+                        <textarea id="broadcastMessage" rows="4" placeholder="Type your message..."></textarea>
                     </div>
                     
-                    <button class="btn btn-green" style="width: 100%;" onclick="sendBroadcast()">📨 SEND BROADCAST</button>
+                    <button class="btn btn-green" style="width: 100%;" onclick="sendBroadcast()">📨 SEND</button>
                 </div>
             </div>
 
@@ -624,8 +672,8 @@
                 <div class="card">
                     <h2>👥 ALL USERS</h2>
                     <input type="text" class="input-group" placeholder="Search users..." onkeyup="searchUsers(this.value)">
-                    <div id="usersList" style="margin-top: 20px; max-height: 400px; overflow-y: auto;">
-                        <p class="loading">Loading users...</p>
+                    <div id="usersList" class="users-list" style="margin-top: 16px;">
+                        <p class="loading">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -635,7 +683,7 @@
                 <div class="card">
                     <h2>📋 ADMIN ACTION LOGS</h2>
                     <div id="logsList" style="max-height: 500px; overflow-y: auto;">
-                        <p class="loading">Loading logs...</p>
+                        <p class="loading">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -656,10 +704,10 @@
         let adminUsername = '';
         let adminRole = '';
 
-        // Handle login - FIXED VERSION
-        function handleLogin() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+        // ========== FIXED LOGIN FUNCTION ==========
+        function adminLogin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
             
             // Clear previous error
             document.getElementById('loginError').textContent = '';
@@ -669,17 +717,25 @@
                 return;
             }
             
-            // Check credentials
+            // Hardcoded credentials check
             if (username === 'awnowner' && password === '12604') {
                 adminUsername = 'awnowner';
                 adminRole = 'owner';
-                showDashboard();
+                
+                localStorage.setItem('adminUsername', adminUsername);
+                localStorage.setItem('adminRole', adminRole);
+                
+                showAdminDashboard();
                 loadAllData();
             }
             else if (username === 'awnadmin' && password === '11512') {
                 adminUsername = 'awnadmin';
                 adminRole = 'admin';
-                showDashboard();
+                
+                localStorage.setItem('adminUsername', adminUsername);
+                localStorage.setItem('adminRole', adminRole);
+                
+                showAdminDashboard();
                 loadAllData();
             }
             else {
@@ -687,31 +743,36 @@
             }
         }
 
-        // Show dashboard
-        function showDashboard() {
+        // Check if already logged in
+        function init() {
+            const savedAdmin = localStorage.getItem('adminUsername');
+            const savedRole = localStorage.getItem('adminRole');
+            
+            if (savedAdmin && savedRole) {
+                adminUsername = savedAdmin;
+                adminRole = savedRole;
+                showAdminDashboard();
+                loadAllData();
+            }
+        }
+
+        // Show admin dashboard
+        function showAdminDashboard() {
             document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('dashboardPage').style.display = 'block';
+            document.getElementById('adminDashboard').style.display = 'block';
             document.getElementById('adminName').textContent = adminUsername;
             document.getElementById('adminRole').textContent = adminRole;
             
             const badge = document.getElementById('roleBadge');
             badge.textContent = adminRole === 'owner' ? 'OWNER' : 'ADMIN';
             badge.className = adminRole === 'owner' ? 'role-badge owner' : 'role-badge admin';
-            
-            // Show/hide owner-only elements
-            if (adminRole !== 'owner') {
-                document.getElementById('ownerOnlyMessage').style.display = 'block';
-                document.getElementById('createTournamentBtn').disabled = true;
-                document.getElementById('createTournamentBtn').style.opacity = '0.5';
-            }
         }
 
-        // Logout
-        function logout() {
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('dashboardPage').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
+        // Admin logout
+        function adminLogout() {
+            localStorage.removeItem('adminUsername');
+            localStorage.removeItem('adminRole');
+            location.reload();
         }
 
         // Switch tabs
@@ -732,7 +793,7 @@
         }
 
         // Load all data
-        function loadAllData() {
+        async function loadAllData() {
             loadStats();
             loadTournamentsList();
             loadPendingApprovals();
@@ -775,11 +836,7 @@
             newRow.className = 'bracket-row';
             newRow.innerHTML = `
                 <input type="number" class="bracket-amount" placeholder="Amount (Birr)" value="30">
-                <select class="bracket-players">
-                    <option value="16">16 Players</option>
-                    <option value="32">32 Players</option>
-                    <option value="64">64 Players</option>
-                </select>
+                <input type="number" class="bracket-players" placeholder="Max Players" value="16">
                 <button onclick="removeBracket(this)">✖</button>
             `;
             container.appendChild(newRow);
@@ -970,10 +1027,7 @@
         }
 
         // Initialize
-        window.onload = function() {
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('dashboardPage').style.display = 'none';
-        }
+        init();
     </script>
 </body>
-                        </html>
+</html>
