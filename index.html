@@ -29,96 +29,122 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .container {
-            padding: 20px;
+            padding: 16px;
             max-width: 1200px;
             margin: 0 auto;
         }
         .hero {
             background: #16213e;
-            padding: 30px 20px;
+            padding: 20px 16px;
             border-radius: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             border: 1px solid #4CAF50;
             text-align: center;
         }
         .hero h1 {
             color: #FFD700;
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 24px;
+            margin-bottom: 8px;
         }
         .hero p {
             color: #8892b0;
+            font-size: 14px;
         }
         .login-section {
             background: #16213e;
-            padding: 20px;
+            padding: 20px 16px;
             border-radius: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             border: 1px solid #4CAF50;
         }
         .login-section h2 {
             color: #4CAF50;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .input-group {
+            margin-bottom: 12px;
+        }
+        .input-group label {
+            display: block;
+            color: #8892b0;
+            font-size: 13px;
+            margin-bottom: 4px;
         }
         .login-input {
             width: 100%;
-            padding: 15px;
+            padding: 14px;
             background: #1e2a3a;
             border: 1px solid #2a3a5a;
             color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             font-family: 'Poppins', sans-serif;
-            margin-bottom: 10px;
+            font-size: 15px;
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: #4CAF50;
         }
         .login-btn {
             background: #4CAF50;
             color: white;
             border: none;
-            padding: 15px;
+            padding: 16px;
             width: 100%;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 600;
+            font-size: 16px;
             cursor: pointer;
+            margin-top: 8px;
+        }
+        .login-btn.secondary {
+            background: #2196F3;
+            margin-top: 8px;
         }
         .user-info {
             background: #1e2a3a;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 16px;
         }
         .username-badge {
             color: #4CAF50;
             font-weight: 600;
+            font-size: 15px;
         }
         .logout-btn {
             background: #f44336;
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
         }
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
             background: #16213e;
-            padding: 10px;
-            border-radius: 50px;
+            padding: 8px;
+            border-radius: 30px;
         }
         .tab {
-            padding: 10px 20px;
-            border-radius: 30px;
+            padding: 10px 12px;
+            border-radius: 25px;
             cursor: pointer;
             background: #1e2a3a;
             color: #8892b0;
             font-weight: 600;
+            font-size: 13px;
             flex: 1;
             text-align: center;
-            min-width: 80px;
+            white-space: nowrap;
         }
         .tab.active {
             background: #4CAF50;
@@ -133,44 +159,47 @@
         .tournament-card {
             background: #16213e;
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
             border: 1px solid #2a3a5a;
         }
         .tournament-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .tournament-name {
             color: #4CAF50;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
         }
         .tournament-type {
             background: #FFD700;
             color: #000;
-            padding: 5px 10px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
         }
         .bracket-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin: 15px 0;
+            margin: 12px 0;
         }
         .bracket-btn {
             background: #1e2a3a;
             border: 1px solid #4CAF50;
             color: white;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 12px 8px;
+            border-radius: 10px;
             cursor: pointer;
             flex: 1;
-            min-width: 100px;
+            min-width: 80px;
+            font-size: 14px;
         }
         .bracket-btn.active {
             background: #4CAF50;
@@ -183,142 +212,208 @@
             background: #4CAF50;
             color: white;
             border: none;
-            padding: 15px;
+            padding: 14px;
             width: 100%;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 600;
-            margin-top: 10px;
+            font-size: 15px;
+            margin-top: 12px;
             cursor: pointer;
         }
         .register-btn:disabled {
-            background: #666;
+            background: #555;
             cursor: not-allowed;
         }
         .players-list {
             background: #1e2a3a;
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 300px;
-            overflow-y: auto;
+            padding: 12px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: scroll;
+            margin-top: 12px;
+        }
+        .players-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .players-list::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
         }
         .player-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
+            padding: 8px 4px;
             border-bottom: 1px solid #2a3a5a;
+            font-size: 13px;
         }
         .player-item:last-child {
             border-bottom: none;
         }
         .player-username {
             color: #4CAF50;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             text-decoration: none;
         }
-        .player-username:hover {
-            text-decoration: underline;
-        }
         .player-amount {
             color: #FFD700;
-        }
-        .standings-table {
-            width: 100%;
-            background: #1e2a3a;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .standings-row {
-            display: grid;
-            grid-template-columns: 30px 1fr 40px 40px 40px 40px 40px 40px 40px 50px;
-            padding: 10px;
-            border-bottom: 1px solid #2a3a5a;
             font-size: 12px;
         }
-        .standings-header {
+        .messages-inbox {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #2a3a5a;
+            margin-top: 16px;
+        }
+        .messages-inbox h3 {
+            color: #4CAF50;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .message-list {
+            max-height: 300px;
+            overflow-y: scroll;
+        }
+        .message-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .message-list::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
+        }
+        .message-item {
+            background: #1e2a3a;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4CAF50;
+        }
+        .message-badge {
+            font-size: 11px;
+            color: #FFD700;
+            margin-bottom: 4px;
+        }
+        .message-content {
+            font-size: 13px;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .message-date {
+            font-size: 10px;
+            color: #8892b0;
+            text-align: right;
+        }
+        .message-unread {
+            border-left-color: #FFD700;
+            background: #253545;
+        }
+        .standings-container {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #2a3a5a;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+        .standings-table {
+            min-width: 600px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .standings-table th {
             background: #4CAF50;
             color: white;
+            padding: 10px 6px;
+            font-size: 12px;
             font-weight: 600;
-        }
-        .standings-row span {
             text-align: center;
+            white-space: nowrap;
         }
-        .standings-row span:first-child {
+        .standings-table td {
+            padding: 8px 4px;
+            font-size: 12px;
+            text-align: center;
+            border-bottom: 1px solid #2a3a5a;
+        }
+        .standings-table tr:last-child td {
+            border-bottom: none;
+        }
+        .standings-table td:first-child {
+            color: #4CAF50;
+            font-weight: 500;
             text-align: left;
         }
+        .standings-table td:last-child {
+            color: #FFD700;
+            font-weight: 700;
+        }
         .bracket-container {
+            overflow-x: auto;
+            padding: 8px 0;
+        }
+        .bracket-flex {
             display: flex;
             gap: 20px;
-            overflow-x: auto;
-            padding: 20px 0;
+            min-width: max-content;
         }
         .bracket-round {
             min-width: 200px;
         }
         .bracket-round h3 {
             color: #4CAF50;
-            margin-bottom: 15px;
+            font-size: 14px;
+            margin-bottom: 12px;
             text-align: center;
         }
         .bracket-match {
             background: #1e2a3a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
             border-left: 3px solid #4CAF50;
         }
         .bracket-players {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            font-size: 12px;
         }
         .bracket-player {
             color: #4CAF50;
-            font-weight: 600;
+            font-weight: 500;
         }
         .bracket-score {
             color: #FFD700;
             font-weight: 700;
+            font-size: 13px;
         }
         .bracket-winner {
             color: #4CAF50;
-            font-size: 12px;
+            font-size: 11px;
             text-align: center;
-        }
-        .history-item {
-            background: #1e2a3a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .history-title {
-            color: #4CAF50;
-            font-weight: 600;
-        }
-        .history-winner {
-            color: #FFD700;
-        }
-        .history-date {
-            color: #8892b0;
-            font-size: 12px;
         }
         .contact-section {
             background: #16213e;
-            padding: 20px;
+            padding: 20px 16px;
             border-radius: 16px;
-            margin: 20px 0;
+            margin: 16px 0;
+            border: 1px solid #2a3a5a;
         }
         .contact-info {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
         .contact-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 16px;
+            gap: 12px;
+            font-size: 14px;
         }
         .telegram-link {
             color: #4CAF50;
@@ -330,23 +425,25 @@
         }
         .message-form textarea {
             width: 100%;
-            padding: 15px;
+            padding: 14px;
             background: #1e2a3a;
             border: 1px solid #2a3a5a;
             color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             margin: 10px 0;
             font-family: 'Poppins', sans-serif;
+            font-size: 14px;
         }
         .send-btn {
             background: #4CAF50;
             color: white;
             border: none;
-            padding: 15px;
+            padding: 14px;
             width: 100%;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 15px;
         }
         .modal {
             display: none;
@@ -357,7 +454,7 @@
             height: 100%;
             background: rgba(0,0,0,0.95);
             z-index: 1000;
-            padding: 20px;
+            padding: 16px;
             overflow-y: auto;
         }
         .modal.show {
@@ -367,34 +464,38 @@
         }
         .modal-content {
             background: #16213e;
-            padding: 25px;
-            border-radius: 16px;
+            padding: 24px 20px;
+            border-radius: 20px;
             width: 100%;
             max-width: 400px;
             border: 1px solid #4CAF50;
         }
         .modal-content h2 {
             color: #4CAF50;
-            margin-bottom: 20px;
+            font-size: 20px;
+            margin-bottom: 16px;
         }
         .payment-details {
             background: #1e2a3a;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+            font-size: 14px;
         }
         .upload-area {
             background: #1e2a3a;
             border: 2px dashed #4CAF50;
-            padding: 30px;
+            padding: 24px;
             text-align: center;
             border-radius: 12px;
-            margin: 20px 0;
+            margin: 16px 0;
             cursor: pointer;
+            font-size: 14px;
         }
         .file-name {
             color: #4CAF50;
-            margin-top: 10px;
+            margin-top: 8px;
+            font-size: 12px;
         }
         .modal-buttons {
             display: flex;
@@ -403,10 +504,11 @@
         }
         .modal-btn {
             flex: 1;
-            padding: 15px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
         }
         .modal-btn.primary {
@@ -419,9 +521,9 @@
         }
         .status-badge {
             display: inline-block;
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 600;
         }
         .status-pending {
@@ -440,19 +542,45 @@
             text-align: center;
             color: #8892b0;
             padding: 20px;
+            font-size: 14px;
         }
         .footer {
             text-align: center;
-            padding: 20px;
+            padding: 20px 16px;
             color: #8892b0;
             border-top: 1px solid #2a3a5a;
             margin-top: 20px;
+            font-size: 12px;
         }
-        @media (max-width: 600px) {
-            .standings-row {
-                grid-template-columns: 25px 1fr 30px 30px 30px 30px 30px 30px 30px 40px;
-                font-size: 10px;
-            }
+        .no-messages {
+            color: #8892b0;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+        }
+        .history-item {
+            background: #1e2a3a;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .history-title {
+            color: #4CAF50;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .history-winner {
+            color: #FFD700;
+            font-size: 13px;
+        }
+        .history-date {
+            color: #8892b0;
+            font-size: 11px;
+        }
+        .pin-input {
+            letter-spacing: 4px;
+            font-size: 18px;
+            text-align: center;
         }
     </style>
 </head>
@@ -464,30 +592,41 @@
     <div class="container">
         <!-- Login Section -->
         <div class="login-section" id="loginSection">
-            <h2>🔐 LOGIN TO CONTINUE</h2>
-            <input type="text" id="telegramUsername" class="login-input" placeholder="Enter your Telegram username (e.g., @awn175)">
-            <input type="text" id="phoneNumber" class="login-input" placeholder="Phone number (optional)">
-            <button class="login-btn" onclick="login()">LOGIN / REGISTER</button>
-            <p style="color: #8892b0; font-size: 12px; margin-top: 10px; text-align: center;">
-                Enter your Telegram username to participate in tournaments
+            <h2>🔐 LOGIN / REGISTER</h2>
+            <div class="input-group">
+                <label>Telegram Username</label>
+                <input type="text" id="telegramUsername" class="login-input" placeholder="@username">
+            </div>
+            <div class="input-group">
+                <label>PIN (4-6 digits)</label>
+                <input type="password" id="pin" class="login-input pin-input" placeholder="••••" maxlength="6" inputmode="numeric">
+            </div>
+            <div class="input-group">
+                <label>Phone (optional)</label>
+                <input type="text" id="phoneNumber" class="login-input" placeholder="+251...">
+            </div>
+            <button class="login-btn" onclick="login()">LOGIN</button>
+            <button class="login-btn secondary" onclick="register()">REGISTER NEW ACCOUNT</button>
+            <p style="color: #8892b0; font-size: 12px; margin-top: 12px; text-align: center;">
+                Use PIN to protect your account
             </p>
         </div>
 
-        <!-- User Info (hidden until login) -->
+        <!-- User Info -->
         <div class="user-info" id="userInfo" style="display: none;">
             <div>
                 <span class="username-badge" id="displayUsername"></span>
-                <span id="adminBadge" style="background: #FFD700; color: #000; padding: 3px 8px; border-radius: 12px; margin-left: 10px; font-size: 11px; display: none;">ADMIN</span>
+                <span id="adminBadge" style="background: #FFD700; color: #000; padding: 3px 8px; border-radius: 12px; margin-left: 8px; font-size: 10px; display: none;">ADMIN</span>
             </div>
             <button class="logout-btn" onclick="logout()">LOGOUT</button>
         </div>
 
-        <!-- Tabs (visible after login) -->
+        <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
             <div class="tab active" onclick="switchTab('tournaments')">🏆 TOURNAMENTS</div>
-            <div class="tab" onclick="switchTab('myregistrations')">📋 MY REGISTRATIONS</div>
+            <div class="tab" onclick="switchTab('myreg')">📋 MY REG</div>
             <div class="tab" onclick="switchTab('standings')">📊 STANDINGS</div>
-            <div class="tab" onclick="switchTab('history')">📜 HISTORY</div>
+            <div class="tab" onclick="switchTab('inbox')">📥 INBOX</div>
             <div class="tab" onclick="switchTab('contact')">📞 CONTACT</div>
         </div>
 
@@ -497,44 +636,47 @@
         </div>
 
         <!-- MY REGISTRATIONS SECTION -->
-        <div id="myregistrations-section" class="section">
+        <div id="myreg-section" class="section">
             <div class="tournament-card">
-                <h2 style="color: #4CAF50; margin-bottom: 15px;">📋 MY REGISTRATIONS</h2>
-                <div id="myRegistrationsList">
-                    <p class="loading">Loading your registrations...</p>
+                <h2 style="color: #4CAF50; font-size: 18px; margin-bottom: 16px;">📋 MY REGISTRATIONS</h2>
+                <div id="myRegistrationsList" class="players-list" style="max-height: 400px;">
+                    <p class="loading">Loading...</p>
                 </div>
             </div>
         </div>
 
         <!-- STANDINGS SECTION -->
         <div id="standings-section" class="section">
-            <div class="tournament-card">
-                <h2 style="color: #4CAF50; margin-bottom: 15px;">📊 LEAGUE STANDINGS</h2>
-                <select id="tournamentSelect" class="login-input" onchange="loadStandings()">
+            <div class="standings-container">
+                <h3 style="color: #4CAF50; margin-bottom: 16px; font-size: 16px;">📊 LEAGUE STANDINGS</h3>
+                <select id="tournamentSelect" class="login-input" onchange="loadStandings()" style="margin-bottom: 16px;">
                     <option value="">Select Tournament</option>
                 </select>
-                <div id="standingsDisplay" style="margin-top: 20px;">
-                    <p class="loading">Select a tournament to view standings</p>
+                <div id="standingsDisplay" style="overflow-x: auto;">
+                    <p class="loading">Select a tournament</p>
                 </div>
             </div>
             
-            <div class="tournament-card">
-                <h2 style="color: #4CAF50; margin-bottom: 15px;">🏆 KNOCKOUT BRACKETS</h2>
-                <select id="knockoutSelect" class="login-input" onchange="loadBracket()">
+            <div class="standings-container">
+                <h3 style="color: #4CAF50; margin-bottom: 16px; font-size: 16px;">🏆 KNOCKOUT BRACKETS</h3>
+                <select id="knockoutSelect" class="login-input" onchange="loadBracket()" style="margin-bottom: 16px;">
                     <option value="">Select Tournament</option>
                 </select>
-                <div id="bracketDisplay" style="margin-top: 20px; overflow-x: auto;">
-                    <p class="loading">Select a tournament to view bracket</p>
+                <div id="bracketDisplay" class="bracket-container">
+                    <p class="loading">Select a tournament</p>
                 </div>
             </div>
         </div>
 
-        <!-- HISTORY SECTION -->
-        <div id="history-section" class="section">
-            <div class="tournament-card">
-                <h2 style="color: #4CAF50; margin-bottom: 15px;">📜 TOURNAMENT HISTORY</h2>
-                <div id="historyList">
-                    <p class="loading">Loading history...</p>
+        <!-- INBOX SECTION -->
+        <div id="inbox-section" class="section">
+            <div class="messages-inbox">
+                <h3>
+                    <span>📬 MESSAGES FROM ADMIN</span>
+                    <span id="unreadBadge" style="background: #f44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; display: none;">0</span>
+                </h3>
+                <div id="messagesList" class="message-list">
+                    <p class="loading">Loading messages...</p>
                 </div>
             </div>
         </div>
@@ -542,22 +684,22 @@
         <!-- CONTACT SECTION -->
         <div id="contact-section" class="section">
             <div class="contact-section">
-                <h2 style="color: #4CAF50; margin-bottom: 20px;">📞 CONTACT & SUPPORT</h2>
+                <h2 style="color: #4CAF50; font-size: 18px; margin-bottom: 16px;">📞 CONTACT</h2>
                 <div class="contact-info">
                     <div class="contact-item">
-                        <span style="font-size: 24px;">📱</span>
+                        <span style="font-size: 20px;">📱</span>
                         <span>+251961231633</span>
                     </div>
                     <div class="contact-item">
-                        <span style="font-size: 24px;">💬</span>
-                        <a href="https://t.me/awn178" class="telegram-link" target="_blank">@awn178 (Result Submission)</a>
+                        <span style="font-size: 20px;">💬</span>
+                        <a href="https://t.me/awn178" class="telegram-link" target="_blank">@awn178 (Results)</a>
                     </div>
                 </div>
                 
                 <div class="message-form">
-                    <h3 style="color: #4CAF50; margin: 20px 0 10px;">SEND MESSAGE TO ADMIN</h3>
-                    <textarea id="userMessage" rows="4" placeholder="Type your message here..."></textarea>
-                    <button class="send-btn" onclick="sendMessage()">📨 SEND MESSAGE</button>
+                    <h3 style="color: #4CAF50; margin: 20px 0 10px; font-size: 15px;">SEND MESSAGE TO ADMIN</h3>
+                    <textarea id="userMessage" rows="4" placeholder="Type your message..."></textarea>
+                    <button class="send-btn" onclick="sendMessage()">📨 SEND</button>
                 </div>
             </div>
         </div>
@@ -572,7 +714,6 @@
                 <p><strong>Tournament:</strong> <span id="modalTournament"></span></p>
                 <p><strong>Amount:</strong> <span id="modalAmount"></span> Birr</p>
                 <p><strong>TeleBirr:</strong> +251961231633</p>
-                <p style="color: #8892b0; font-size: 12px; margin-top: 10px;">Send payment to this number and upload screenshot</p>
             </div>
 
             <input type="text" id="transactionId" class="login-input" placeholder="Transaction ID (optional)">
@@ -611,54 +752,72 @@
         let selectedTournament = null;
         let selectedBracket = null;
         let selectedBracketId = null;
+        let selectedAmount = null;
 
-        // Check if Telegram Web App is available
-        const tg = window.Telegram?.WebApp;
-        
-        // Initialize
+        // Check for saved login
         function init() {
-            // Try to get Telegram data
-            if (tg) {
-                tg.ready();
-                tg.expand();
-                const tgUser = tg.initDataUnsafe?.user;
-                if (tgUser?.username) {
-                    document.getElementById('telegramUsername').value = '@' + tgUser.username;
-                }
-            }
-            
-            // Check for saved login
             const savedUserId = localStorage.getItem('userId');
             const savedUsername = localStorage.getItem('username');
-            const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
+            const savedPin = localStorage.getItem('pin');
             
             if (savedUserId && savedUsername) {
                 userId = savedUserId;
                 username = savedUsername;
-                isAdmin = savedIsAdmin;
-                showLoggedIn();
-                loadData();
+                autoLogin(savedPin);
             }
         }
 
-        // Login function
-        async function login() {
-            const telegramUsername = document.getElementById('telegramUsername').value.trim();
-            const phone = document.getElementById('phoneNumber').value.trim();
-            
-            if (!telegramUsername) {
-                alert('Please enter your Telegram username');
-                return;
-            }
-
+        // Auto login with saved PIN
+        async function autoLogin(pin) {
             try {
                 const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
+                        telegram_username: username,
+                        pin: pin
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    userId = data.user_id;
+                    isAdmin = data.is_admin;
+                    showLoggedIn();
+                    loadData();
+                } else {
+                    logout();
+                }
+            } catch (e) {
+                logout();
+            }
+        }
+
+        // Register new user
+        async function register() {
+            const telegramUsername = document.getElementById('telegramUsername').value.trim();
+            const pin = document.getElementById('pin').value.trim();
+            const phone = document.getElementById('phoneNumber').value.trim();
+            
+            if (!telegramUsername) {
+                alert('Please enter Telegram username');
+                return;
+            }
+            
+            if (!pin || pin.length < 4 || pin.length > 6) {
+                alert('PIN must be 4-6 digits');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/register_user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
                         telegram_username: telegramUsername,
-                        phone: phone,
-                        chat_id: tg?.initDataUnsafe?.user?.id
+                        pin: pin,
+                        phone: phone
                     })
                 });
                 
@@ -669,10 +828,51 @@
                     username = data.username;
                     isAdmin = data.is_admin;
                     
-                    // Save to localStorage
                     localStorage.setItem('userId', userId);
                     localStorage.setItem('username', username);
-                    localStorage.setItem('isAdmin', isAdmin);
+                    localStorage.setItem('pin', pin);
+                    
+                    showLoggedIn();
+                    loadData();
+                    showSuccess('Account created successfully!');
+                } else {
+                    alert('Registration failed: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Login existing user
+        async function login() {
+            const telegramUsername = document.getElementById('telegramUsername').value.trim();
+            const pin = document.getElementById('pin').value.trim();
+            
+            if (!telegramUsername || !pin) {
+                alert('Please enter username and PIN');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        telegram_username: telegramUsername,
+                        pin: pin
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    userId = data.user_id;
+                    username = data.username;
+                    isAdmin = data.is_admin;
+                    
+                    localStorage.setItem('userId', userId);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('pin', pin);
                     
                     showLoggedIn();
                     loadData();
@@ -680,7 +880,7 @@
                     alert('Login failed: ' + data.message);
                 }
             } catch (e) {
-                alert('Error logging in: ' + e.message);
+                alert('Error: ' + e.message);
             }
         }
 
@@ -708,17 +908,28 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             
             event.target.classList.add('active');
-            document.getElementById(tab + '-section').classList.add('active');
             
-            if (tab === 'tournaments') loadTournaments();
-            if (tab === 'myregistrations') loadMyRegistrations();
-            if (tab === 'standings') loadTournamentSelect();
-            if (tab === 'history') loadHistory();
+            if (tab === 'tournaments') {
+                document.getElementById('tournaments-section').classList.add('active');
+                loadTournaments();
+            } else if (tab === 'myreg') {
+                document.getElementById('myreg-section').classList.add('active');
+                loadMyRegistrations();
+            } else if (tab === 'standings') {
+                document.getElementById('standings-section').classList.add('active');
+                loadTournamentSelect();
+            } else if (tab === 'inbox') {
+                document.getElementById('inbox-section').classList.add('active');
+                loadUserMessages();
+            } else if (tab === 'contact') {
+                document.getElementById('contact-section').classList.add('active');
+            }
         }
 
         // Load all data
-        async function loadData() {
+        function loadData() {
             loadTournaments();
+            loadUserMessages();
         }
 
         // Load tournaments
@@ -732,22 +943,32 @@
                 if (tournaments.length === 0) {
                     html = '<div class="tournament-card"><p style="color: #8892b0;">No active tournaments</p></div>';
                 } else {
-                    tournaments.forEach(t => {
+                    for (const t of tournaments) {
+                        // Check if user is already registered in this tournament
+                        let isRegistered = false;
+                        try {
+                            const checkRes = await fetch(`/api/check_registration?user_id=${userId}&tournament_id=${t.id}`);
+                            const checkData = await checkRes.json();
+                            isRegistered = checkData.registered;
+                        } catch (e) {}
+                        
                         let bracketsHtml = '';
                         let playersHtml = '';
                         
                         // Create bracket buttons
-                        t.brackets.forEach(b => {
-                            const isFull = b.current >= b.max_players;
-                            bracketsHtml += `
-                                <button class="bracket-btn ${isFull ? 'full' : ''}" 
-                                        onclick="selectBracket(${b.id}, ${b.amount}, '${t.name}', ${isFull})"
-                                        ${isFull ? 'disabled' : ''}>
-                                    ${b.amount} Birr<br>
-                                    <small>${b.current}/${b.max_players}</small>
-                                </button>
-                            `;
-                        });
+                        if (t.status !== 'not_started' && !isRegistered) {
+                            t.brackets.forEach(b => {
+                                const isFull = b.current >= b.max_players;
+                                bracketsHtml += `
+                                    <button class="bracket-btn ${isFull ? 'full' : ''}" 
+                                            onclick="selectBracket(${b.id}, ${b.amount}, '${t.name}', ${isFull})"
+                                            ${isFull ? 'disabled' : ''}>
+                                        ${b.amount}B<br>
+                                        <small>${b.current}/${b.max_players}</small>
+                                    </button>
+                                `;
+                            });
+                        }
                         
                         // Create players list
                         if (t.players.length > 0) {
@@ -756,41 +977,48 @@
                                 playersHtml += `
                                     <div class="player-item">
                                         <a href="https://t.me/${p.username.replace('@', '')}" target="_blank" class="player-username">${p.username}</a>
-                                        <span class="player-amount">${p.amount} Birr</span>
+                                        <span class="player-amount">${p.amount}B</span>
                                     </div>
                                 `;
                             });
                             playersHtml += '</div>';
                         } else {
-                            playersHtml = '<p style="color: #8892b0; text-align: center;">No players registered yet</p>';
+                            playersHtml = '<p style="color: #8892b0; text-align: center; font-size: 13px; padding: 10px;">No players yet</p>';
+                        }
+                        
+                        let registerButton = '';
+                        if (t.status === 'not_started') {
+                            registerButton = '<p style="color: #FFC107; font-size: 13px; text-align: center;">⏳ Not started</p>';
+                        } else if (isRegistered) {
+                            registerButton = '<p style="color: #4CAF50; font-size: 13px; text-align: center;">✅ Already registered</p>';
+                        } else {
+                            registerButton = `
+                                <div class="bracket-buttons">${bracketsHtml}</div>
+                                <button class="register-btn" onclick="openRegisterModal()" id="registerBtn" disabled>SELECT AMOUNT</button>
+                            `;
                         }
                         
                         html += `
                             <div class="tournament-card">
                                 <div class="tournament-header">
                                     <span class="tournament-name">${t.name}</span>
-                                    <span class="tournament-type">${t.type.toUpperCase()}</span>
+                                    <span class="tournament-type">${t.type}</span>
                                 </div>
-                                
-                                ${t.status === 'not_started' ? 
-                                    '<p style="color: #FFC107;">⏳ Tournament not started yet</p>' : 
-                                    '<div class="bracket-buttons">' + bracketsHtml + '</div>'
-                                }
-                                
-                                <div style="margin-top: 20px;">
-                                    <h3 style="color: #4CAF50; margin-bottom: 10px;">Registered Players</h3>
+                                ${registerButton}
+                                <div style="margin-top: 12px;">
+                                    <h3 style="color: #8892b0; font-size: 13px; margin-bottom: 8px;">Registered Players (${t.players.length})</h3>
                                     ${playersHtml}
                                 </div>
                             </div>
                         `;
-                    });
+                    }
                 }
                 
                 document.getElementById('tournamentsList').innerHTML = html;
                 
             } catch (e) {
-                console.error('Error loading tournaments:', e);
-                document.getElementById('tournamentsList').innerHTML = '<div class="tournament-card"><p style="color: #f44336;">Error loading tournaments</p></div>';
+                console.error('Error:', e);
+                document.getElementById('tournamentsList').innerHTML = '<div class="tournament-card"><p style="color: #f44336;">Error loading</p></div>';
             }
         }
 
@@ -805,20 +1033,19 @@
             selectedAmount = amount;
             selectedTournament = tournamentName;
             
-            // Highlight selected button
             document.querySelectorAll('.bracket-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
             
-            // Show register button
-            openRegisterModal();
+            document.getElementById('registerBtn').disabled = false;
+            document.getElementById('registerBtn').textContent = `REGISTER ${amount} BIRR`;
         }
 
         // Open registration modal
         function openRegisterModal() {
             if (!selectedBracketId) {
-                alert('Please select an amount first');
+                alert('Please select an amount');
                 return;
             }
             
@@ -851,7 +1078,7 @@
         async function submitRegistration() {
             const fileInput = document.getElementById('screenshotInput');
             if (!fileInput.files[0]) {
-                alert('Please upload a payment screenshot');
+                alert('Please upload payment screenshot');
                 return;
             }
 
@@ -879,13 +1106,13 @@
                     
                     if (data.success) {
                         closeModal();
-                        showSuccess('Registration submitted! Admin will review your payment within 24 hours.');
+                        showSuccess('Registration submitted! Admin will review within 24 hours.');
                         loadTournaments();
                     } else {
                         alert('Error: ' + data.message);
                     }
                 } catch (e) {
-                    alert('Error submitting registration: ' + e.message);
+                    alert('Error: ' + e.message);
                 } finally {
                     document.querySelector('.modal-btn.primary').textContent = 'SUBMIT';
                 }
@@ -908,7 +1135,7 @@
                 let html = '';
                 
                 if (registrations.length === 0) {
-                    html = '<p style="color: #8892b0; text-align: center;">You have no registrations yet</p>';
+                    html = '<p style="color: #8892b0; text-align: center;">No registrations</p>';
                 } else {
                     registrations.forEach(r => {
                         let statusClass = 'status-pending';
@@ -918,12 +1145,10 @@
                         html += `
                             <div class="player-item">
                                 <div>
-                                    <div style="font-weight: 600;">${r.tournament}</div>
-                                    <div style="color: #8892b0; font-size: 12px;">${r.type} - ${r.amount} Birr</div>
+                                    <div style="font-weight: 600; font-size: 13px;">${r.tournament}</div>
+                                    <div style="color: #8892b0; font-size: 11px;">${r.amount}B - ${r.type}</div>
                                 </div>
-                                <div>
-                                    <span class="status-badge ${statusClass}">${r.status}</span>
-                                </div>
+                                <span class="status-badge ${statusClass}">${r.status}</span>
                             </div>
                         `;
                     });
@@ -932,19 +1157,18 @@
                 document.getElementById('myRegistrationsList').innerHTML = html;
                 
             } catch (e) {
-                console.error('Error loading registrations:', e);
-                document.getElementById('myRegistrationsList').innerHTML = '<p style="color: #f44336;">Error loading registrations</p>';
+                document.getElementById('myRegistrationsList').innerHTML = '<p style="color: #f44336;">Error loading</p>';
             }
-        }
+    }
 
-        // Load tournament select for standings
+        // Load tournament select
         async function loadTournamentSelect() {
             try {
                 const res = await fetch('/api/tournaments');
                 const tournaments = await res.json();
                 
-                let knockoutOptions = '<option value="">Select Tournament</option>';
-                let leagueOptions = '<option value="">Select Tournament</option>';
+                let leagueOptions = '<option value="">Select League</option>';
+                let knockoutOptions = '<option value="">Select Knockout</option>';
                 
                 tournaments.forEach(t => {
                     if (t.type === 'league') {
@@ -957,12 +1181,10 @@
                 document.getElementById('tournamentSelect').innerHTML = leagueOptions;
                 document.getElementById('knockoutSelect').innerHTML = knockoutOptions;
                 
-            } catch (e) {
-                console.error('Error loading tournaments:', e);
-            }
+            } catch (e) {}
         }
 
-        // Load league standings
+        // Load standings
         async function loadStandings() {
             const tournamentId = document.getElementById('tournamentSelect').value;
             if (!tournamentId) return;
@@ -971,49 +1193,33 @@
                 const res = await fetch(`/api/standings/${tournamentId}`);
                 const standings = await res.json();
                 
-                let html = '<div class="standings-table">';
-                html += `
-                    <div class="standings-row standings-header">
-                        <span>#</span>
-                        <span>Player</span>
-                        <span>P</span>
-                        <span>W</span>
-                        <span>D</span>
-                        <span>L</span>
-                        <span>GF</span>
-                        <span>GA</span>
-                        <span>GD</span>
-                        <span>Pts</span>
-                    </div>
-                `;
+                let html = '<table class="standings-table"><thead><tr>';
+                html += '<th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>';
+                html += '</tr></thead><tbody>';
                 
-                standings.forEach((s, index) => {
-                    html += `
-                        <div class="standings-row">
-                            <span>${index + 1}</span>
-                            <span style="text-align: left; color: #4CAF50;">${s.username}</span>
-                            <span>${s.played}</span>
-                            <span>${s.won}</span>
-                            <span>${s.drawn}</span>
-                            <span>${s.lost}</span>
-                            <span>${s.gf}</span>
-                            <span>${s.ga}</span>
-                            <span>${s.gd}</span>
-                            <span style="font-weight: 700; color: #FFD700;">${s.points}</span>
-                        </div>
-                    `;
+                standings.forEach(s => {
+                    html += `<tr>`;
+                    html += `<td style="text-align: left;">${s.username}</td>`;
+                    html += `<td>${s.played}</td>`;
+                    html += `<td>${s.won}</td>`;
+                    html += `<td>${s.drawn}</td>`;
+                    html += `<td>${s.lost}</td>`;
+                    html += `<td>${s.gf}</td>`;
+                    html += `<td>${s.ga}</td>`;
+                    html += `<td>${s.gd}</td>`;
+                    html += `<td>${s.points}</td>`;
+                    html += `</tr>`;
                 });
                 
-                html += '</div>';
+                html += '</tbody></table>';
                 document.getElementById('standingsDisplay').innerHTML = html;
                 
             } catch (e) {
-                console.error('Error loading standings:', e);
-                document.getElementById('standingsDisplay').innerHTML = '<p style="color: #f44336;">Error loading standings</p>';
+                document.getElementById('standingsDisplay').innerHTML = '<p style="color: #f44336;">Error loading</p>';
             }
         }
 
-        // Load knockout bracket
+        // Load bracket
         async function loadBracket() {
             const tournamentId = document.getElementById('knockoutSelect').value;
             if (!tournamentId) return;
@@ -1022,9 +1228,7 @@
                 const res = await fetch(`/api/bracket/${tournamentId}`);
                 const rounds = await res.json();
                 
-                let html = '<div class="bracket-container">';
-                
-                // Sort rounds
+                let html = '<div class="bracket-flex">';
                 const roundNumbers = Object.keys(rounds).sort((a, b) => a - b);
                 
                 roundNumbers.forEach(round => {
@@ -1036,7 +1240,7 @@
                             <div class="bracket-match">
                                 <div class="bracket-players">
                                     <span class="bracket-player">${match.player1 || 'TBD'}</span>
-                                    <span class="bracket-score">${match.score1} - ${match.score2}</span>
+                                    <span class="bracket-score">${match.score1}-${match.score2}</span>
                                     <span class="bracket-player">${match.player2 || 'TBD'}</span>
                                 </div>
                                 ${match.winner ? `<div class="bracket-winner">Winner: ${match.winner}</div>` : ''}
@@ -1051,38 +1255,49 @@
                 document.getElementById('bracketDisplay').innerHTML = html;
                 
             } catch (e) {
-                console.error('Error loading bracket:', e);
-                document.getElementById('bracketDisplay').innerHTML = '<p style="color: #f44336;">Error loading bracket</p>';
+                document.getElementById('bracketDisplay').innerHTML = '<p style="color: #f44336;">Error loading</p>';
             }
         }
 
-        // Load tournament history
-        async function loadHistory() {
+        // Load user messages
+        async function loadUserMessages() {
             try {
-                const res = await fetch('/api/history');
-                const history = await res.json();
+                const res = await fetch(`/api/user/messages?user_id=${userId}`);
+                const messages = await res.json();
                 
                 let html = '';
+                let unreadCount = 0;
                 
-                if (history.length === 0) {
-                    html = '<p style="color: #8892b0;">No tournament history yet</p>';
+                if (messages.length === 0) {
+                    html = '<p class="no-messages">No messages yet</p>';
                 } else {
-                    history.forEach(h => {
+                    messages.forEach(m => {
+                        const isUnread = !m.is_read;
+                        if (isUnread) unreadCount++;
+                        
+                        let badge = m.type === 'broadcast' ? '📢 Broadcast' : '📩 Admin Reply';
+                        
                         html += `
-                            <div class="history-item">
-                                <div class="history-title">${h.name}</div>
-                                <div class="history-winner">Winner: ${h.winner}</div>
-                                <div class="history-date">${new Date(h.date).toLocaleDateString()}</div>
+                            <div class="message-item ${isUnread ? 'message-unread' : ''}">
+                                <div class="message-badge">${badge}</div>
+                                <div class="message-content">${m.content}</div>
+                                <div class="message-date">${new Date(m.date).toLocaleString()}</div>
                             </div>
                         `;
                     });
                 }
                 
-                document.getElementById('historyList').innerHTML = html;
+                document.getElementById('messagesList').innerHTML = html;
+                
+                if (unreadCount > 0) {
+                    document.getElementById('unreadBadge').style.display = 'inline-block';
+                    document.getElementById('unreadBadge').textContent = unreadCount;
+                } else {
+                    document.getElementById('unreadBadge').style.display = 'none';
+                }
                 
             } catch (e) {
-                console.error('Error loading history:', e);
-                document.getElementById('historyList').innerHTML = '<p style="color: #f44336;">Error loading history</p>';
+                document.getElementById('messagesList').innerHTML = '<p class="no-messages">Error loading</p>';
             }
         }
 
@@ -1113,11 +1328,11 @@
                     alert('Error: ' + data.message);
                 }
             } catch (e) {
-                alert('Error sending message: ' + e.message);
+                alert('Error: ' + e.message);
             }
         }
 
-        // Initialize on load
+        // Initialize
         init();
     </script>
 </body>
