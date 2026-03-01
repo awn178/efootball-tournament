@@ -6,7 +6,7 @@
     <title>Admin - eFootball Tournament</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ALL YOUR EXISTING STYLES HERE - KEEP THEM EXACTLY THE SAME */
+        /* ALL YOUR EXISTING STYLES - KEEP THEM EXACTLY AS THEY WERE */
         * {
             margin: 0;
             padding: 0;
@@ -547,6 +547,9 @@
             <div id="tournaments-section" class="section">
                 <div class="card">
                     <h2>➕ CREATE NEW TOURNAMENT</h2>
+                    <div id="ownerOnlyMessage" style="background: #FFC107; color: #000; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none;">
+                        ⚠️ Only owner can create tournaments
+                    </div>
                     <div class="input-group">
                         <label>Tournament Name</label>
                         <input type="text" id="tournamentName" placeholder="e.g., Knockout Championship #1">
@@ -572,13 +575,13 @@
                         <button class="btn btn-blue" style="margin-top: 10px; width: 100%;" onclick="addBracket()">➕ Add Bracket</button>
                     </div>
                     
-                    <button class="btn btn-green" style="width: 100%; margin-top: 10px;" onclick="createTournament()">CREATE TOURNAMENT</button>
+                    <button class="btn btn-green" style="width: 100%; margin-top: 10px;" id="createTournamentBtn" onclick="createTournament()">CREATE TOURNAMENT</button>
                 </div>
 
                 <div class="card">
                     <h2>🏆 ACTIVE TOURNAMENTS</h2>
                     <div id="tournamentsList" style="max-height: 400px; overflow-y: auto;">
-                        <p class="loading">Loading...</p>
+                        <p class="loading">Loading tournaments...</p>
                     </div>
                 </div>
             </div>
@@ -588,7 +591,7 @@
                 <div class="card">
                     <h2>✅ PENDING APPROVALS</h2>
                     <div id="pendingList" style="max-height: 500px; overflow-y: auto;">
-                        <p class="loading">Loading...</p>
+                        <p class="loading">Loading pending approvals...</p>
                     </div>
                 </div>
             </div>
@@ -599,14 +602,14 @@
                     <div class="card">
                         <h2>⚔️ PENDING MATCHES</h2>
                         <div id="pendingMatches" style="max-height: 400px; overflow-y: auto;">
-                            <p class="loading">Loading...</p>
+                            <p class="loading">Loading matches...</p>
                         </div>
                     </div>
                     
                     <div class="card">
                         <h2>📊 LEAGUE STANDINGS</h2>
                         <select id="leagueSelect" class="input-group" onchange="loadLeagueStandings()" style="margin-bottom: 16px;">
-                            <option value="">Select League</option>
+                            <option value="">Select League Tournament</option>
                         </select>
                         <div class="standings-wrapper">
                             <table class="standings-table" id="leagueStandings">
@@ -622,7 +625,7 @@
                 <div class="card">
                     <h2>🏆 KNOCKOUT BRACKETS</h2>
                     <select id="knockoutSelect" class="input-group" onchange="loadKnockoutBracket()" style="margin-bottom: 16px;">
-                        <option value="">Select Knockout</option>
+                        <option value="">Select Knockout Tournament</option>
                     </select>
                     <div id="knockoutBracket" style="overflow-x: auto;"></div>
                 </div>
@@ -633,7 +636,7 @@
                 <div class="card">
                     <h2>💬 USER MESSAGES</h2>
                     <div id="messagesList" style="max-height: 500px; overflow-y: auto;">
-                        <p class="loading">Loading...</p>
+                        <p class="loading">Loading messages...</p>
                     </div>
                 </div>
             </div>
@@ -647,8 +650,8 @@
                         <label>Send To</label>
                         <select id="broadcastTarget" onchange="toggleSpecificUser()">
                             <option value="all">📢 All Users</option>
-                            <option value="knockout">🏆 Knockout Players</option>
-                            <option value="league">⚽ League Players</option>
+                            <option value="knockout">🏆 Knockout Players Only</option>
+                            <option value="league">⚽ League Players Only</option>
                             <option value="specific">👤 Specific User</option>
                         </select>
                     </div>
@@ -660,10 +663,10 @@
                     
                     <div class="input-group">
                         <label>Message</label>
-                        <textarea id="broadcastMessage" rows="4" placeholder="Type your message..."></textarea>
+                        <textarea id="broadcastMessage" rows="5" placeholder="Type your broadcast message here..."></textarea>
                     </div>
                     
-                    <button class="btn btn-green" style="width: 100%;" onclick="sendBroadcast()">📨 SEND</button>
+                    <button class="btn btn-green" style="width: 100%;" onclick="sendBroadcast()">📨 SEND BROADCAST</button>
                 </div>
             </div>
 
@@ -673,7 +676,7 @@
                     <h2>👥 ALL USERS</h2>
                     <input type="text" class="input-group" placeholder="Search users..." onkeyup="searchUsers(this.value)">
                     <div id="usersList" class="users-list" style="margin-top: 16px;">
-                        <p class="loading">Loading...</p>
+                        <p class="loading">Loading users...</p>
                     </div>
                 </div>
             </div>
@@ -683,7 +686,7 @@
                 <div class="card">
                     <h2>📋 ADMIN ACTION LOGS</h2>
                     <div id="logsList" style="max-height: 500px; overflow-y: auto;">
-                        <p class="loading">Loading...</p>
+                        <p class="loading">Loading logs...</p>
                     </div>
                 </div>
             </div>
@@ -766,6 +769,13 @@
             const badge = document.getElementById('roleBadge');
             badge.textContent = adminRole === 'owner' ? 'OWNER' : 'ADMIN';
             badge.className = adminRole === 'owner' ? 'role-badge owner' : 'role-badge admin';
+            
+            // Show/hide owner-only elements
+            if (adminRole !== 'owner') {
+                document.getElementById('ownerOnlyMessage').style.display = 'block';
+                document.getElementById('createTournamentBtn').disabled = true;
+                document.getElementById('createTournamentBtn').style.opacity = '0.5';
+            }
         }
 
         // Admin logout
@@ -786,7 +796,10 @@
             if (tab === 'dashboard') loadStats();
             if (tab === 'tournaments') loadTournamentsList();
             if (tab === 'approvals') loadPendingApprovals();
-            if (tab === 'matches') loadMatches();
+            if (tab === 'matches') {
+                loadMatches();
+                loadTournamentSelects();
+            }
             if (tab === 'messages') loadMessages();
             if (tab === 'users') loadUsers();
             if (tab === 'logs') loadLogs();
@@ -813,20 +826,52 @@
         // Load stats
         async function loadStats() {
             try {
-                // Simulated data - replace with actual API calls
-                document.getElementById('totalUsers').textContent = '25';
-                document.getElementById('totalTournaments').textContent = '3';
-                document.getElementById('pendingApprovals').textContent = '2';
-                document.getElementById('totalMatches').textContent = '8';
-                document.getElementById('activeCount').textContent = '2';
-                document.getElementById('registeredCount').textContent = '15';
-                document.getElementById('completedMatches').textContent = '5';
+                const tourRes = await fetch('/api/tournaments');
+                const tournaments = await tourRes.json();
                 
-                document.getElementById('recentActivity').innerHTML = `
-                    <div class="log-item">New registration from @player1</div>
-                    <div class="log-item">Match completed: @player2 vs @player3</div>
-                `;
-            } catch (e) {}
+                const pendRes = await fetch(`/api/admin/pending?admin=${adminUsername}&role=${adminRole}`);
+                const pending = await pendRes.json();
+                
+                document.getElementById('totalTournaments').textContent = tournaments.length;
+                document.getElementById('pendingApprovals').textContent = pending.length;
+                
+                // Get total users (unique from all tournaments)
+                const users = new Set();
+                tournaments.forEach(t => {
+                    t.players.forEach(p => users.add(p.username));
+                });
+                document.getElementById('totalUsers').textContent = users.size;
+                
+                // Count matches (would need a separate API)
+                document.getElementById('totalMatches').textContent = '0';
+                
+                const active = tournaments.filter(t => t.status !== 'completed').length;
+                document.getElementById('activeCount').textContent = active;
+                
+                let registered = 0;
+                tournaments.forEach(t => registered += t.players.length);
+                document.getElementById('registeredCount').textContent = registered;
+                document.getElementById('completedMatches').textContent = '0';
+                
+                // Recent activity
+                let activityHtml = '';
+                if (pending.length > 0) {
+                    pending.slice(0, 5).forEach(r => {
+                        activityHtml += `
+                            <div class="log-item">
+                                <span class="log-admin">${r.username}</span> registered for ${r.tournament}
+                                <div class="log-time">${new Date(r.date).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    activityHtml = '<p style="color: #8892b0;">No recent activity</p>';
+                }
+                document.getElementById('recentActivity').innerHTML = activityHtml;
+                
+            } catch (e) {
+                console.log('Error loading stats:', e);
+            }
         }
 
         // Add bracket row
@@ -856,71 +901,229 @@
                 alert('Only owner can create tournaments');
                 return;
             }
-            alert('Tournament created successfully!');
+            
+            const name = document.getElementById('tournamentName').value;
+            const type = document.getElementById('tournamentType').value;
+            
+            if (!name) {
+                alert('Please enter tournament name');
+                return;
+            }
+            
+            const amountInputs = document.querySelectorAll('.bracket-amount');
+            const playersInputs = document.querySelectorAll('.bracket-players');
+            
+            const brackets = [];
+            for (let i = 0; i < amountInputs.length; i++) {
+                if (!amountInputs[i].value || !playersInputs[i].value) {
+                    alert('Please fill all bracket fields');
+                    return;
+                }
+                brackets.push({
+                    amount: parseInt(amountInputs[i].value),
+                    max_players: parseInt(playersInputs[i].value)
+                });
+            }
+            
+            try {
+                const res = await fetch('/api/admin/create_tournament', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        name: name,
+                        type: type,
+                        brackets: brackets
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Tournament created!');
+                    document.getElementById('tournamentName').value = '';
+                    loadTournamentsList();
+                    loadTournamentSelects();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         // Load tournaments list
-        function loadTournamentsList() {
-            document.getElementById('tournamentsList').innerHTML = `
-                <div class="pending-item">
-                    <div class="pending-header">
-                        <span class="username">Premier League</span>
-                        <span style="color: #4CAF50;">registration</span>
-                    </div>
-                    <p style="color: #8892b0;">Type: league</p>
-                    <p style="color: #8892b0;">Players: 8/15</p>
-                </div>
-                <div class="pending-item">
-                    <div class="pending-header">
-                        <span class="username">Knockout Cup</span>
-                        <span style="color: #4CAF50;">registration</span>
-                    </div>
-                    <p style="color: #8892b0;">Type: knockout</p>
-                    <p style="color: #8892b0;">Players: 12/32</p>
-                </div>
-            `;
+        async function loadTournamentsList() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let html = '';
+                
+                if (tournaments.length === 0) {
+                    html = '<p style="color: #8892b0;">No tournaments</p>';
+                } else {
+                    tournaments.forEach(t => {
+                        const statusColor = t.status === 'not_started' ? '#FFC107' : 
+                                           t.status === 'registration' ? '#4CAF50' : '#2196F3';
+                        
+                        let bracketsText = '';
+                        t.brackets.forEach(b => {
+                            bracketsText += `${b.amount}B (${b.current}/${b.max_players}) `;
+                        });
+                        
+                        html += `
+                            <div class="pending-item">
+                                <div class="pending-header">
+                                    <span class="username">${t.name}</span>
+                                    <span style="color: ${statusColor};">${t.status}</span>
+                                </div>
+                                <p style="color: #8892b0; font-size: 13px;">Type: ${t.type}</p>
+                                <p style="color: #8892b0; font-size: 13px;">Brackets: ${bracketsText}</p>
+                                <p style="color: #8892b0; font-size: 13px;">Players: ${t.players.length}</p>
+                                ${adminRole === 'owner' && t.status === 'not_started' ? 
+                                    `<button class="btn btn-green" style="margin-top: 10px;" onclick="startTournament(${t.id})">▶️ START</button>` : ''}
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('tournamentsList').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('tournamentsList').innerHTML = '<p style="color: #f44336;">Error loading tournaments</p>';
+            }
+        }
+
+        // Start tournament
+        async function startTournament(tournamentId) {
+            if (!confirm('Start this tournament? Users can now register.')) return;
+            
+            try {
+                const res = await fetch('/api/admin/start_tournament', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        tournament_id: tournamentId
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Tournament started!');
+                    loadTournamentsList();
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         // Load pending approvals
-        function loadPendingApprovals() {
-            document.getElementById('pendingList').innerHTML = `
-                <div class="pending-item">
-                    <div class="pending-header">
-                        <span class="username">@player1</span>
-                        <span class="amount">50 Birr</span>
-                    </div>
-                    <p style="color: #8892b0;">Tournament: Premier League</p>
-                    <p style="color: #8892b0;">Date: 3/1/2026</p>
-                    <div class="pending-actions">
-                        <button class="btn btn-green" onclick="approvePayment(1)">✅ APPROVE</button>
-                        <button class="btn btn-red" onclick="rejectPayment(1)">❌ REJECT</button>
-                        <button class="btn btn-blue" onclick="viewScreenshot('demo')">📸 VIEW</button>
-                    </div>
-                </div>
-            `;
+        async function loadPendingApprovals() {
+            try {
+                const res = await fetch(`/api/admin/pending?admin=${adminUsername}&role=${adminRole}`);
+                const pending = await res.json();
+                
+                let html = '';
+                
+                if (pending.length === 0) {
+                    html = '<p style="color: #8892b0;">No pending approvals</p>';
+                } else {
+                    pending.forEach(p => {
+                        html += `
+                            <div class="pending-item">
+                                <div class="pending-header">
+                                    <span class="username">${p.username}</span>
+                                    <span class="amount">${p.amount} Birr</span>
+                                </div>
+                                <p style="color: #8892b0; font-size: 13px;">${p.tournament}</p>
+                                <p style="color: #8892b0; font-size: 12px;">${new Date(p.date).toLocaleString()}</p>
+                                <div class="pending-actions">
+                                    <button class="btn btn-green" onclick="approvePayment(${p.id})">✅ APPROVE</button>
+                                    <button class="btn btn-red" onclick="rejectPayment(${p.id})">❌ REJECT</button>
+                                    <button class="btn btn-blue" onclick="viewScreenshot('${p.screenshot}')">📸 VIEW</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('pendingList').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('pendingList').innerHTML = '<p style="color: #f44336;">Error loading pending</p>';
+            }
         }
 
         // Approve payment
-        function approvePayment(id) {
-            if (confirm('Approve this registration?')) {
-                alert('Payment approved!');
-                loadPendingApprovals();
+        async function approvePayment(regId) {
+            if (!confirm('Approve this registration?')) return;
+            
+            try {
+                const res = await fetch('/api/admin/process_registration', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        registration_id: regId,
+                        action: 'approve'
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Approved!');
+                    loadPendingApprovals();
+                    loadStats();
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
             }
         }
 
         // Reject payment
-        function rejectPayment(id) {
+        async function rejectPayment(regId) {
             const reason = prompt('Reason for rejection:');
-            if (reason) {
-                alert('Payment rejected!');
-                loadPendingApprovals();
+            if (!reason) return;
+            
+            try {
+                const res = await fetch('/api/admin/process_registration', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        registration_id: regId,
+                        action: 'reject',
+                        reason: reason
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('❌ Rejected!');
+                    loadPendingApprovals();
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
             }
         }
 
         // View screenshot
-        function viewScreenshot(path) {
+        function viewScreenshot(screenshotData) {
+            if (!screenshotData || screenshotData === 'null') {
+                alert('Screenshot not available');
+                return;
+            }
+            document.getElementById('screenshotImg').src = screenshotData;
             document.getElementById('screenshotModal').classList.add('show');
-            document.getElementById('screenshotImg').src = 'https://via.placeholder.com/400x600?text=Payment+Screenshot';
         }
 
         // Close screenshot
@@ -929,105 +1132,259 @@
         }
 
         // Load matches
-        function loadMatches() {
-            document.getElementById('pendingMatches').innerHTML = `
-                <div class="match-item">
-                    <div class="match-players">
-                        <span class="username">Premier League</span>
-                        <span>Round 1</span>
-                    </div>
-                    <p>8 players registered</p>
-                    <button class="btn btn-blue">GENERATE FIXTURES</button>
-                </div>
-            `;
+        async function loadMatches() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let html = '';
+                let hasMatches = false;
+                
+                tournaments.forEach(t => {
+                    if (t.players.length > 0) {
+                        hasMatches = true;
+                        html += `
+                            <div class="match-item">
+                                <div class="match-players">
+                                    <span class="username">${t.name}</span>
+                                    <span>${t.players.length} players</span>
+                                </div>
+                                ${t.players.length >= 2 ? 
+                                    `<button class="btn btn-blue" onclick="alert('Generate fixtures for ${t.name}')">🎲 GENERATE FIXTURES</button>` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                
+                if (!hasMatches) html = '<p style="color: #8892b0;">No pending matches</p>';
+                document.getElementById('pendingMatches').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('pendingMatches').innerHTML = '<p style="color: #f44336;">Error loading matches</p>';
+            }
         }
 
         // Load tournament selects
-        function loadTournamentSelects() {
-            document.getElementById('leagueSelect').innerHTML = `
-                <option value="">Select League</option>
-                <option value="1">Premier League</option>
-            `;
-            document.getElementById('knockoutSelect').innerHTML = `
-                <option value="">Select Knockout</option>
-                <option value="2">Knockout Cup</option>
-            `;
+        async function loadTournamentSelects() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let leagueOptions = '<option value="">Select League</option>';
+                let knockoutOptions = '<option value="">Select Knockout</option>';
+                
+                tournaments.forEach(t => {
+                    if (t.type === 'league') {
+                        leagueOptions += `<option value="${t.id}">${t.name}</option>`;
+                    } else {
+                        knockoutOptions += `<option value="${t.id}">${t.name}</option>`;
+                    }
+                });
+                
+                document.getElementById('leagueSelect').innerHTML = leagueOptions;
+                document.getElementById('knockoutSelect').innerHTML = knockoutOptions;
+                
+            } catch (e) {}
         }
 
         // Load league standings
-        function loadLeagueStandings() {
-            document.querySelector('#leagueStandings tbody').innerHTML = `
-                <tr><td>@player1</td><td>3</td><td>2</td><td>1</td><td>0</td><td>8</td><td>3</td><td>+5</td><td>7</td></tr>
-                <tr><td>@player2</td><td>3</td><td>2</td><td>0</td><td>1</td><td>6</td><td>4</td><td>+2</td><td>6</td></tr>
-                <tr><td>@player3</td><td>3</td><td>1</td><td>1</td><td>1</td><td>4</td><td>5</td><td>-1</td><td>4</td></tr>
-            `;
+        async function loadLeagueStandings() {
+            const tournamentId = document.getElementById('leagueSelect').value;
+            if (!tournamentId) return;
+            
+            try {
+                const res = await fetch(`/api/standings/${tournamentId}`);
+                const standings = await res.json();
+                
+                let tbody = '';
+                standings.forEach(s => {
+                    tbody += `<tr>
+                        <td style="text-align: left;">${s.username}</td>
+                        <td>${s.played}</td>
+                        <td>${s.won}</td>
+                        <td>${s.drawn}</td>
+                        <td>${s.lost}</td>
+                        <td>${s.gf}</td>
+                        <td>${s.ga}</td>
+                        <td>${s.gd}</td>
+                        <td>${s.points}</td>
+                    </tr>`;
+                });
+                
+                document.querySelector('#leagueStandings tbody').innerHTML = tbody;
+                
+            } catch (e) {
+                document.querySelector('#leagueStandings tbody').innerHTML = '<tr><td colspan="9">Error loading standings</td></tr>';
+            }
         }
 
         // Load knockout bracket
-        function loadKnockoutBracket() {
-            document.getElementById('knockoutBracket').innerHTML = `
-                <div style="display: flex; gap: 20px;">
-                    <div style="min-width: 200px;">
-                        <h3 style="color: #4CAF50;">Round 1</h3>
-                        <div style="background: #1e2a3a; padding: 12px; margin-bottom: 10px;">
-                            <div>@player1 vs @player2</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        async function loadKnockoutBracket() {
+            const tournamentId = document.getElementById('knockoutSelect').value;
+            if (!tournamentId) {
+                document.getElementById('knockoutBracket').innerHTML = '';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/bracket/${tournamentId}`);
+                const rounds = await res.json();
+                
+                let html = '<div style="display: flex; gap: 20px;">';
+                const roundNumbers = Object.keys(rounds).sort((a, b) => a - b);
+                
+                if (roundNumbers.length === 0) {
+                    html = '<p style="color: #8892b0;">No matches yet</p>';
+                } else {
+                    roundNumbers.forEach(round => {
+                        html += `<div style="min-width: 200px;"><h3 style="color: #4CAF50;">Round ${round}</h3>`;
+                        rounds[round].forEach(match => {
+                            html += `
+                                <div style="background: #1e2a3a; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>${match.player1 || 'TBD'}</span>
+                                        <span>${match.score1}-${match.score2}</span>
+                                        <span>${match.player2 || 'TBD'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    });
+                }
+                html += '</div>';
+                
+                document.getElementById('knockoutBracket').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('knockoutBracket').innerHTML = '<p style="color: #f44336;">Error loading bracket</p>';
+            }
         }
 
         // Load messages
-        function loadMessages() {
-            document.getElementById('messagesList').innerHTML = `
-                <div class="message-item">
-                    <div class="message-user">@player1</div>
-                    <div class="message-text">When is my next match?</div>
-                    <div class="message-date">3/1/2026</div>
-                </div>
-            `;
+        async function loadMessages() {
+            try {
+                const res = await fetch(`/api/admin/messages?admin=${adminUsername}&role=${adminRole}`);
+                const messages = await res.json();
+                
+                let html = '';
+                
+                if (messages.length === 0) {
+                    html = '<p style="color: #8892b0;">No messages</p>';
+                } else {
+                    messages.forEach(m => {
+                        html += `
+                            <div class="message-item">
+                                <div class="message-user">${m.username}</div>
+                                <div class="message-text">${m.message}</div>
+                                <div class="message-date">${new Date(m.date).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('messagesList').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('messagesList').innerHTML = '<p style="color: #f44336;">Error loading messages</p>';
+            }
         }
 
         // Send broadcast
-        function sendBroadcast() {
+        async function sendBroadcast() {
+            const target = document.getElementById('broadcastTarget').value;
+            const specificUser = document.getElementById('specificUser').value;
             const message = document.getElementById('broadcastMessage').value;
+            
             if (!message) {
                 alert('Please enter a message');
                 return;
             }
-            alert('Broadcast sent!');
-            document.getElementById('broadcastMessage').value = '';
+            
+            if (target === 'specific' && !specificUser) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/admin/broadcast', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        target: target,
+                        specific_user: specificUser,
+                        message: message
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('📢 Broadcast sent!');
+                    document.getElementById('broadcastMessage').value = '';
+                    document.getElementById('specificUser').value = '';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         // Load users
-        function loadUsers() {
-            document.getElementById('usersList').innerHTML = `
-                <div class="user-item">
-                    <span class="username">@player1</span>
-                    <button class="btn btn-red">BAN</button>
-                </div>
-                <div class="user-item">
-                    <span class="username">@player2</span>
-                    <button class="btn btn-red">BAN</button>
-                </div>
-            `;
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                const users = new Set();
+                tournaments.forEach(t => {
+                    t.players.forEach(p => users.add(p.username));
+                });
+                
+                let html = '';
+                if (users.size === 0) {
+                    html = '<p style="color: #8892b0;">No users</p>';
+                } else {
+                    users.forEach(username => {
+                        html += `
+                            <div class="user-item">
+                                <span class="username">${username}</span>
+                                <button class="btn btn-red" onclick="banUser('${username}')">BAN</button>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('usersList').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('usersList').innerHTML = '<p style="color: #f44336;">Error loading users</p>';
+            }
+        }
+
+        // Ban user
+        function banUser(username) {
+            if (confirm(`Ban ${username}?`)) {
+                alert(`User ${username} banned (feature coming soon)`);
+            }
         }
 
         // Search users
         function searchUsers(query) {
-            // Implement search
+            // Implement search if needed
         }
 
         // Load logs
         function loadLogs() {
-            document.getElementById('logsList').innerHTML = `
-                <div class="log-item">awnowner created tournament 'Premier League'</div>
-                <div class="log-item">awnadmin approved payment for @player1</div>
-            `;
+            // This would need a logs API endpoint
+            document.getElementById('logsList').innerHTML = '<p style="color: #8892b0;">Logs feature coming soon</p>';
         }
 
         // Initialize
         init();
     </script>
 </body>
-</html>
+                            </html>
