@@ -7,6 +7,7 @@ import base64
 import logging
 import sys
 import requests
+import re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -21,9 +22,24 @@ CORS(app)
 
 # Configuration
 BOT_TOKEN = "8406169991:AAHcP5z7eHiKiSFGlRH3fOSDQS5gkjK-0EM"
-OWNER_USERNAME = "@awn175"
+OWNER_USERNAME = "awnowner"  # Changed from @awn175
+ADMIN_USERNAME = "awnadmin"
 RESULT_SUBMISSION = "@awn178"
 ADMIN_PHONE = "+251961231633"
+
+# Admin credentials (in production, these would be hashed in database)
+ADMIN_CREDENTIALS = {
+    "awnowner": {
+        "password": "12604",
+        "role": "owner",
+        "full_name": "Owner"
+    },
+    "awnadmin": {
+        "password": "11512",
+        "role": "admin",
+        "full_name": "Tournament Admin"
+    }
+}
 
 # Database connection
 def get_db():
@@ -37,6 +53,23 @@ def get_db():
     except Exception as e:
         print(f"❌ Database connection error: {str(e)}")
         raise e
+
+# Validate Telegram username
+def validate_telegram_username(username):
+    """Check if username exists on Telegram (simulated - in production would use Telegram API)"""
+    # Remove @ if present
+    clean_username = username.replace('@', '')
+    
+    # Basic validation: at least 5 chars, alphanumeric + underscore
+    if len(clean_username) < 5:
+        return False, "Username too short (min 5 characters)"
+    
+    if not re.match("^[a-zA-Z0-9_]+$", clean_username):
+        return False, "Username can only contain letters, numbers, and underscore"
+    
+    # In production, you would call Telegram API to verify
+    # For now, we'll accept all valid format usernames
+    return True, clean_username
 
 # Send Telegram notification
 def send_telegram(chat_id, message):
@@ -59,16 +92,19 @@ def init_db():
         
         print("📦 Creating database tables...")
         
-        # Users table
+        # Users table with PIN
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 telegram_username VARCHAR(255) UNIQUE NOT NULL,
+                pin VARCHAR(10) NOT NULL,
                 phone VARCHAR(50),
                 is_admin BOOLEAN DEFAULT FALSE,
+                admin_role VARCHAR(50),
                 is_banned BOOLEAN DEFAULT FALSE,
                 joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                chat_id BIGINT
+                chat_id BIGINT,
+                last_login TIMESTAMP
             )
         """)
         print("✅ users table created")
@@ -87,7 +123,7 @@ def init_db():
         """)
         print("✅ tournaments table created")
         
-        # Tournament brackets (multiple entry fees per tournament)
+        # Tournament brackets
         cur.execute("""
             CREATE TABLE IF NOT EXISTS brackets (
                 id SERIAL PRIMARY KEY,
@@ -147,31 +183,17 @@ def init_db():
                 player2_score INTEGER DEFAULT 0,
                 winner_id INTEGER REFERENCES users(id),
                 status VARCHAR(50) DEFAULT 'scheduled',
-                match_date TIMESTAMP,
-                UNIQUE(tournament_id, round, player1_id, player2_id)
+                match_date TIMESTAMP
             )
         """)
         print("✅ matches table created")
         
-        # Knockout bracket structure
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS knockout_matches (
-                id SERIAL PRIMARY KEY,
-                tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-                round INTEGER NOT NULL,
-                match_id INTEGER REFERENCES matches(id),
-                next_match_id INTEGER,
-                position INTEGER
-            )
-        """)
-        print("✅ knockout_matches table created")
-        
-        # Messages
+        # Messages (including broadcasts)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS messages (
                 id SERIAL PRIMARY KEY,
-                from_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                to_user_id INTEGER REFERENCES users(id),
+                from_user_id INTEGER REFERENCES users(id),
+                to_user_id INTEGER,
                 content TEXT NOT NULL,
                 sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_read BOOLEAN DEFAULT FALSE,
@@ -180,18 +202,30 @@ def init_db():
         """)
         print("✅ messages table created")
         
-        # Tournament history archive
+        # Broadcast messages (store for users)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS tournament_history (
+            CREATE TABLE IF NOT EXISTS broadcasts (
                 id SERIAL PRIMARY KEY,
-                tournament_id INTEGER REFERENCES tournaments(id),
-                user_id INTEGER REFERENCES users(id),
-                result VARCHAR(50),
-                prize VARCHAR(100),
-                archived_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                from_admin VARCHAR(255),
+                target VARCHAR(50),
+                content TEXT NOT NULL,
+                sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        print("✅ tournament_history table created")
+        print("✅ broadcasts table created")
+        
+        # User broadcast read status
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_broadcasts (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                broadcast_id INTEGER REFERENCES broadcasts(id) ON DELETE CASCADE,
+                is_read BOOLEAN DEFAULT FALSE,
+                read_date TIMESTAMP,
+                UNIQUE(user_id, broadcast_id)
+            )
+        """)
+        print("✅ user_broadcasts table created")
         
         # Admin logs
         cur.execute("""
@@ -204,14 +238,6 @@ def init_db():
             )
         """)
         print("✅ admin_logs table created")
-        
-        # Insert owner as admin
-        cur.execute("""
-            INSERT INTO users (telegram_username, is_admin) 
-            VALUES (%s, TRUE) 
-            ON CONFLICT (telegram_username) DO UPDATE SET is_admin = TRUE
-        """, (OWNER_USERNAME,))
-        print("✅ owner admin created")
         
         conn.commit()
         cur.close()
@@ -231,39 +257,75 @@ def index():
 def admin():
     return send_from_directory('.', 'admin.html')
 
+@app.route('/admin/login')
+def admin_login_page():
+    return send_from_directory('.', 'admin_login.html')
+
 # Test route
 @app.route('/api/test')
 def test():
     return jsonify({'status': 'Server is running!', 'database': 'connected'})
 
-# 1. Register/Login user
-@app.route('/api/login', methods=['POST'])
-def login():
+# 1. Admin login
+@app.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    try:
+        data = request.json
+        username = data.get('username', '')
+        password = data.get('password', '')
+        
+        # Check credentials
+        if username in ADMIN_CREDENTIALS and ADMIN_CREDENTIALS[username]['password'] == password:
+            role = ADMIN_CREDENTIALS[username]['role']
+            return jsonify({
+                'success': True,
+                'username': username,
+                'role': role,
+                'full_name': ADMIN_CREDENTIALS[username]['full_name']
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Invalid username or password'})
+            
+    except Exception as e:
+        print(f"❌ Admin login error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# 2. Register/Login user (with PIN)
+@app.route('/api/register_user', methods=['POST'])
+def register_user():
     try:
         data = request.json
         telegram_username = data.get('telegram_username', '')
+        pin = data.get('pin', '')
         phone = data.get('phone', '')
         chat_id = data.get('chat_id')
         
-        if not telegram_username:
-            return jsonify({'success': False, 'message': 'Username required'})
+        if not telegram_username or not pin:
+            return jsonify({'success': False, 'message': 'Username and PIN required'})
         
-        if not telegram_username.startswith('@'):
-            telegram_username = '@' + telegram_username
+        if len(pin) < 4 or len(pin) > 6:
+            return jsonify({'success': False, 'message': 'PIN must be 4-6 digits'})
+        
+        # Validate username
+        is_valid, result = validate_telegram_username(telegram_username)
+        if not is_valid:
+            return jsonify({'success': False, 'message': result})
+        
+        clean_username = '@' + result
         
         conn = get_db()
         cur = conn.cursor()
         
         # Check if user exists
-        cur.execute("SELECT id, is_admin, is_banned FROM users WHERE telegram_username = %s", (telegram_username,))
+        cur.execute("SELECT id, pin, is_admin, is_banned FROM users WHERE telegram_username = %s", (clean_username,))
         user = cur.fetchone()
         
         if not user:
-            # New user
+            # New user - register with PIN
             cur.execute("""
-                INSERT INTO users (telegram_username, phone, chat_id) 
-                VALUES (%s, %s, %s) RETURNING id, is_admin, is_banned
-            """, (telegram_username, phone, chat_id))
+                INSERT INTO users (telegram_username, pin, phone, chat_id) 
+                VALUES (%s, %s, %s, %s) RETURNING id, is_admin, is_banned
+            """, (clean_username, pin, phone, chat_id))
             user = cur.fetchone()
             user_id = user[0]
             is_admin = user[1]
@@ -271,15 +333,22 @@ def login():
             
             # Welcome message
             if chat_id:
-                send_telegram(chat_id, f"👋 Welcome to eFootball Tournament {telegram_username}!\nYou can now register for tournaments.")
+                send_telegram(chat_id, f"👋 Welcome to eFootball Tournament {clean_username}!\nYour account is created with PIN protection.")
         else:
+            # Existing user - verify PIN
             user_id = user[0]
-            is_admin = user[1]
-            is_banned = user[2]
+            stored_pin = user[1]
+            is_admin = user[2]
+            is_banned = user[3]
+            
+            if stored_pin != pin:
+                cur.close()
+                conn.close()
+                return jsonify({'success': False, 'message': 'Invalid PIN'})
             
             # Update chat_id if provided
             if chat_id:
-                cur.execute("UPDATE users SET chat_id = %s WHERE id = %s", (chat_id, user_id))
+                cur.execute("UPDATE users SET chat_id = %s, last_login = CURRENT_TIMESTAMP WHERE id = %s", (chat_id, user_id))
         
         conn.commit()
         cur.close()
@@ -292,21 +361,77 @@ def login():
             'success': True,
             'user_id': user_id,
             'is_admin': is_admin,
-            'username': telegram_username
+            'username': clean_username
+        })
+        
+    except Exception as e:
+        print(f"❌ Register user error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# 3. User login (existing user)
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        telegram_username = data.get('telegram_username', '')
+        pin = data.get('pin', '')
+        chat_id = data.get('chat_id')
+        
+        if not telegram_username or not pin:
+            return jsonify({'success': False, 'message': 'Username and PIN required'})
+        
+        clean_username = telegram_username if telegram_username.startswith('@') else '@' + telegram_username
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("SELECT id, pin, is_admin, is_banned FROM users WHERE telegram_username = %s", (clean_username,))
+        user = cur.fetchone()
+        
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'User not found. Please register first.'})
+        
+        user_id = user[0]
+        stored_pin = user[1]
+        is_admin = user[2]
+        is_banned = user[3]
+        
+        if stored_pin != pin:
+            cur.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid PIN'})
+        
+        # Update chat_id if provided
+        if chat_id:
+            cur.execute("UPDATE users SET chat_id = %s, last_login = CURRENT_TIMESTAMP WHERE id = %s", (chat_id, user_id))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        if is_banned:
+            return jsonify({'success': False, 'message': 'You are banned from the tournament'})
+        
+        return jsonify({
+            'success': True,
+            'user_id': user_id,
+            'is_admin': is_admin,
+            'username': clean_username
         })
         
     except Exception as e:
         print(f"❌ Login error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 2. Get all tournaments
+# 4. Get all tournaments
 @app.route('/api/tournaments', methods=['GET'])
 def get_tournaments():
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Get all active tournaments
         cur.execute("""
             SELECT * FROM tournaments 
             WHERE status != 'completed' 
@@ -316,7 +441,7 @@ def get_tournaments():
         
         result = []
         for t in tournaments:
-            # Get brackets for this tournament
+            # Get brackets
             cur.execute("""
                 SELECT * FROM brackets 
                 WHERE tournament_id = %s AND is_active = TRUE
@@ -333,7 +458,7 @@ def get_tournaments():
                     'current': b['current_registered']
                 })
             
-            # Get registered players for this tournament
+            # Get registered players
             cur.execute("""
                 SELECT u.telegram_username, b.amount
                 FROM registrations r
@@ -369,23 +494,24 @@ def get_tournaments():
         print(f"❌ Tournaments error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 3. Create tournament (admin only)
+# 5. Create tournament (admin only - owner only)
 @app.route('/api/admin/create_tournament', methods=['POST'])
 def create_tournament():
     try:
         data = request.json
         admin_user = data.get('admin')
+        admin_role = data.get('role')
         name = data.get('name')
         tournament_type = data.get('type')
-        brackets = data.get('brackets')  # List of {amount, max_players}
+        brackets = data.get('brackets')
         
-        if admin_user != OWNER_USERNAME:
-            return jsonify({'success': False, 'message': 'Unauthorized'})
+        # Only owner can create tournaments
+        if admin_role != 'owner':
+            return jsonify({'success': False, 'message': 'Only owner can create tournaments'})
         
         conn = get_db()
         cur = conn.cursor()
         
-        # Create tournament
         cur.execute("""
             INSERT INTO tournaments (name, type, status) 
             VALUES (%s, %s, 'not_started') 
@@ -416,21 +542,22 @@ def create_tournament():
         print(f"❌ Create tournament error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 4. Start tournament (admin only)
+# 6. Start tournament (admin only - owner only)
 @app.route('/api/admin/start_tournament', methods=['POST'])
 def start_tournament():
     try:
         data = request.json
         admin_user = data.get('admin')
+        admin_role = data.get('role')
         tournament_id = data.get('tournament_id')
         
-        if admin_user != OWNER_USERNAME:
-            return jsonify({'success': False, 'message': 'Unauthorized'})
+        # Only owner can start tournaments
+        if admin_role != 'owner':
+            return jsonify({'success': False, 'message': 'Only owner can start tournaments'})
         
         conn = get_db()
         cur = conn.cursor()
         
-        # Update tournament status
         cur.execute("""
             UPDATE tournaments 
             SET status = 'registration' 
@@ -467,7 +594,7 @@ def start_tournament():
         print(f"❌ Start tournament error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 5. Submit registration with screenshot
+# 7. Submit registration with screenshot
 @app.route('/api/register', methods=['POST'])
 def register():
     try:
@@ -483,14 +610,17 @@ def register():
         conn = get_db()
         cur = conn.cursor()
         
-        # Check if already registered
+        # Check if already registered in this tournament
         cur.execute("""
-            SELECT id FROM registrations 
-            WHERE user_id = %s AND bracket_id = %s AND status = 'approved'
+            SELECT r.id FROM registrations r
+            JOIN brackets b ON r.bracket_id = b.id
+            WHERE r.user_id = %s AND b.tournament_id = (
+                SELECT tournament_id FROM brackets WHERE id = %s
+            ) AND r.status = 'approved'
         """, (user_id, bracket_id))
         existing = cur.fetchone()
         if existing:
-            return jsonify({'success': False, 'message': 'Already registered'})
+            return jsonify({'success': False, 'message': 'Already registered in this tournament'})
         
         # Save screenshot
         screenshot_filename = f"payment_{user_id}_{bracket_id}_{uuid.uuid4()}.jpg"
@@ -530,17 +660,17 @@ def register():
                 f"Amount: {info[1]} Birr\n"
                 f"Status: Pending approval")
         
-        # Notify admin
-        admin_chat_id = None
-        cur.execute("SELECT chat_id FROM users WHERE telegram_username = %s", (OWNER_USERNAME,))
-        admin = cur.fetchone()
-        if admin and admin[0]:
-            send_telegram(admin[0],
-                f"👑 NEW REGISTRATION PENDING\n"
-                f"User: {info[2]}\n"
-                f"Tournament: {info[0]}\n"
-                f"Amount: {info[1]} Birr\n"
-                f"Check admin panel to approve")
+        # Notify admins (both owner and admin)
+        cur.execute("SELECT chat_id FROM users WHERE telegram_username IN ('awnowner', 'awnadmin') AND chat_id IS NOT NULL")
+        admins = cur.fetchall()
+        for admin in admins:
+            if admin[0]:
+                send_telegram(admin[0],
+                    f"👑 NEW REGISTRATION PENDING\n"
+                    f"User: {info[2]}\n"
+                    f"Tournament: {info[0]}\n"
+                    f"Amount: {info[1]} Birr\n"
+                    f"Check admin panel to approve")
         
         conn.commit()
         cur.close()
@@ -552,12 +682,15 @@ def register():
         print(f"❌ Register error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 6. Get pending registrations (admin)
+# 8. Get pending registrations (admin - both owner and admin)
 @app.route('/api/admin/pending', methods=['GET'])
 def get_pending():
     try:
         admin_user = request.args.get('admin')
-        if admin_user != OWNER_USERNAME:
+        admin_role = request.args.get('role')
+        
+        # Both owner and admin can view pending
+        if admin_role not in ['owner', 'admin']:
             return jsonify({'success': False, 'message': 'Unauthorized'})
         
         conn = get_db()
@@ -577,12 +710,20 @@ def get_pending():
         pending = cur.fetchall()
         result = []
         for p in pending:
+            # Read screenshot file and convert to base64 for display
+            screenshot_base64 = None
+            try:
+                with open(p['screenshot_url'], 'rb') as f:
+                    screenshot_base64 = base64.b64encode(f.read()).decode('utf-8')
+            except:
+                pass
+            
             result.append({
                 'id': p['id'],
                 'username': p['telegram_username'],
                 'tournament': p['tournament_name'],
                 'amount': p['amount'],
-                'screenshot': p['screenshot_url'],
+                'screenshot': f"data:image/jpeg;base64,{screenshot_base64}" if screenshot_base64 else None,
                 'date': p['submitted_date'].isoformat() if p['submitted_date'] else None
             })
         
@@ -594,17 +735,19 @@ def get_pending():
         print(f"❌ Pending error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 7. Approve/reject registration
+# 9. Approve/reject registration (admin - both owner and admin)
 @app.route('/api/admin/process_registration', methods=['POST'])
 def process_registration():
     try:
         data = request.json
         admin_user = data.get('admin')
+        admin_role = data.get('role')
         reg_id = data.get('registration_id')
-        action = data.get('action')  # 'approve' or 'reject'
+        action = data.get('action')
         reason = data.get('reason', '')
         
-        if admin_user != OWNER_USERNAME:
+        # Both owner and admin can approve/reject
+        if admin_role not in ['owner', 'admin']:
             return jsonify({'success': False, 'message': 'Unauthorized'})
         
         conn = get_db()
@@ -697,7 +840,7 @@ def process_registration():
         print(f"❌ Process error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 8. Get league standings
+# 10. Get league standings
 @app.route('/api/standings/<int:tournament_id>', methods=['GET'])
 def get_standings(tournament_id):
     try:
@@ -735,186 +878,166 @@ def get_standings(tournament_id):
         print(f"❌ Standings error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 9. Get knockout bracket
-@app.route('/api/bracket/<int:tournament_id>', methods=['GET'])
-def get_bracket(tournament_id):
+# 11. Get messages for user (including broadcasts)
+@app.route('/api/user/messages', methods=['GET'])
+def get_user_messages():
     try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'})
+        
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Get all matches for this tournament
+        # Get personal messages (user to admin replies)
         cur.execute("""
-            SELECT m.*, u1.telegram_username as player1, u2.telegram_username as player2,
-                   w.telegram_username as winner_name
-            FROM matches m
-            LEFT JOIN users u1 ON m.player1_id = u1.id
-            LEFT JOIN users u2 ON m.player2_id = u2.id
-            LEFT JOIN users w ON m.winner_id = w.id
-            WHERE m.tournament_id = %s
-            ORDER BY m.round, m.id
-        """, (tournament_id,))
+            SELECT m.id, 'admin_reply' as type, m.content, m.sent_date
+            FROM messages m
+            WHERE m.to_user_id = %s
+            ORDER BY m.sent_date DESC
+        """, (int(user_id),))
+        personal_msgs = cur.fetchall()
         
-        matches = cur.fetchall()
+        # Get broadcasts for this user
+        cur.execute("""
+            SELECT b.id, 'broadcast' as type, b.content, b.sent_date, ub.is_read
+            FROM broadcasts b
+            JOIN user_broadcasts ub ON b.id = ub.broadcast_id
+            WHERE ub.user_id = %s
+            ORDER BY b.sent_date DESC
+        """, (int(user_id),))
+        broadcasts = cur.fetchall()
         
-        # Group by round
-        rounds = {}
-        for m in matches:
-            if m['round'] not in rounds:
-                rounds[m['round']] = []
-            rounds[m['round']].append({
+        # Combine and sort
+        all_messages = []
+        for m in personal_msgs:
+            all_messages.append({
                 'id': m['id'],
-                'player1': m['player1'],
-                'player2': m['player2'],
-                'score1': m['player1_score'],
-                'score2': m['player2_score'],
-                'winner': m['winner_name'],
-                'status': m['status']
+                'type': m['type'],
+                'content': m['content'],
+                'date': m['sent_date'].isoformat() if m['sent_date'] else None,
+                'is_read': True
             })
         
+        for b in broadcasts:
+            all_messages.append({
+                'id': b['id'],
+                'type': b['type'],
+                'content': b['content'],
+                'date': b['sent_date'].isoformat() if b['sent_date'] else None,
+                'is_read': b['is_read']
+            })
+        
+        # Sort by date (newest first)
+        all_messages.sort(key=lambda x: x['date'], reverse=True)
+        
+        # Mark broadcasts as read
+        cur.execute("""
+            UPDATE user_broadcasts SET is_read = TRUE, read_date = CURRENT_TIMESTAMP
+            WHERE user_id = %s AND is_read = FALSE
+        """, (int(user_id),))
+        
+        conn.commit()
         cur.close()
         conn.close()
-        return jsonify(rounds)
+        
+        return jsonify(all_messages)
         
     except Exception as e:
-        print(f"❌ Bracket error: {str(e)}")
+        print(f"❌ User messages error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 10. Enter match result (admin only)
-@app.route('/api/admin/enter_result', methods=['POST'])
-def enter_result():
+# 12. Send broadcast (admin only)
+@app.route('/api/admin/broadcast', methods=['POST'])
+def send_broadcast():
     try:
         data = request.json
         admin_user = data.get('admin')
-        match_id = data.get('match_id')
-        score1 = data.get('score1', 0)
-        score2 = data.get('score2', 0)
+        admin_role = data.get('role')
+        target = data.get('target')
+        specific_user = data.get('specific_user')
+        message = data.get('message')
         
-        if admin_user != OWNER_USERNAME:
+        # Both owner and admin can broadcast
+        if admin_role not in ['owner', 'admin']:
             return jsonify({'success': False, 'message': 'Unauthorized'})
         
         conn = get_db()
         cur = conn.cursor()
         
-        # Get match details
+        # Save broadcast
         cur.execute("""
-            SELECT m.*, t.type, t.id as tournament_id,
-                   u1.chat_id as player1_chat, u2.chat_id as player2_chat,
-                   u1.telegram_username as p1_name, u2.telegram_username as p2_name
-            FROM matches m
-            JOIN tournaments t ON m.tournament_id = t.id
-            LEFT JOIN users u1 ON m.player1_id = u1.id
-            LEFT JOIN users u2 ON m.player2_id = u2.id
-            WHERE m.id = %s
-        """, (match_id,))
-        match = cur.fetchone()
+            INSERT INTO broadcasts (from_admin, target, content)
+            VALUES (%s, %s, %s)
+            RETURNING id
+        """, (admin_user, target, message))
+        broadcast_id = cur.fetchone()[0]
         
-        if not match:
-            return jsonify({'success': False, 'message': 'Match not found'})
-        
-        winner_id = None
-        if score1 > score2:
-            winner_id = match[2]  # player1_id
-        elif score2 > score1:
-            winner_id = match[3]  # player2_id
-        
-        # Update match
-        cur.execute("""
-            UPDATE matches 
-            SET player1_score = %s, player2_score = %s, winner_id = %s, status = 'completed'
-            WHERE id = %s
-        """, (score1, score2, winner_id, match_id))
-        
-        # If league, update standings
-        if match[13] == 'league':  # type
-            tournament_id = match[14]
-            
-            # Update player1 stats
-            if match[2]:  # player1_id
+        # Get target users and send
+        if target == 'all':
+            cur.execute("SELECT id, chat_id FROM users WHERE chat_id IS NOT NULL AND is_banned = FALSE")
+            users = cur.fetchall()
+            for user in users:
+                if user[1]:
+                    send_telegram(user[1], f"📢 <b>Broadcast Message</b>\n\n{message}")
+                # Link broadcast to user
                 cur.execute("""
-                    UPDATE league_standings 
-                    SET played = played + 1,
-                        goals_for = goals_for + %s,
-                        goals_against = goals_against + %s,
-                        goal_difference = (goals_for + %s) - (goals_against + %s)
-                    WHERE tournament_id = %s AND user_id = %s
-                """, (score1, score2, score1, score2, tournament_id, match[2]))
+                    INSERT INTO user_broadcasts (user_id, broadcast_id)
+                    VALUES (%s, %s)
+                """, (user[0], broadcast_id))
                 
-                if winner_id == match[2]:
-                    cur.execute("""
-                        UPDATE league_standings 
-                        SET won = won + 1,
-                            points = points + 3
-                        WHERE tournament_id = %s AND user_id = %s
-                    """, (tournament_id, match[2]))
-                elif winner_id is None:
-                    cur.execute("""
-                        UPDATE league_standings 
-                        SET drawn = drawn + 1,
-                            points = points + 1
-                        WHERE tournament_id = %s AND user_id = %s
-                    """, (tournament_id, match[2]))
-                else:
-                    cur.execute("""
-                        UPDATE league_standings 
-                        SET lost = lost + 1
-                        WHERE tournament_id = %s AND user_id = %s
-                    """, (tournament_id, match[2]))
-            
-            # Update player2 stats
-            if match[3]:  # player2_id
+        elif target == 'knockout':
+            cur.execute("""
+                SELECT DISTINCT u.id, u.chat_id
+                FROM users u
+                JOIN registrations r ON u.id = r.user_id
+                JOIN brackets b ON r.bracket_id = b.id
+                JOIN tournaments t ON b.tournament_id = t.id
+                WHERE t.type = 'knockout' AND r.status = 'approved' AND u.chat_id IS NOT NULL
+            """)
+            users = cur.fetchall()
+            for user in users:
+                if user[1]:
+                    send_telegram(user[1], f"🏆 <b>Knockout Tournament Update</b>\n\n{message}")
                 cur.execute("""
-                    UPDATE league_standings 
-                    SET played = played + 1,
-                        goals_for = goals_for + %s,
-                        goals_against = goals_against + %s,
-                        goal_difference = (goals_for + %s) - (goals_against + %s)
-                    WHERE tournament_id = %s AND user_id = %s
-                """, (score2, score1, score2, score1, tournament_id, match[3]))
+                    INSERT INTO user_broadcasts (user_id, broadcast_id)
+                    VALUES (%s, %s)
+                """, (user[0], broadcast_id))
                 
-                if winner_id == match[3]:
-                    cur.execute("""
-                        UPDATE league_standings 
-                        SET won = won + 1,
-                            points = points + 3
-                        WHERE tournament_id = %s AND user_id = %s
-                    """, (tournament_id, match[3]))
-                elif winner_id is None:
-                    cur.execute("""
-                        UPDATE league_standings 
-                        SET drawn = drawn + 1,
-                            points = points + 1
-                        WHERE tournament_id = %s AND user_id = %s
-                    """, (tournament_id, match[3]))
-                else:
-                    cur.execute("""
-                        UPDATE league_standings 
-                        SET lost = lost + 1
-                        WHERE tournament_id = %s AND user_id = %s
-                    """, (tournament_id, match[3]))
-        
-        # Notify players
-        result_text = f"{score1} - {score2}"
-        winner_name = match[15] if winner_id == match[2] else match[16] if winner_id == match[3] else "Draw"
-        
-        if match[4]:  # player1_chat
-            send_telegram(match[4], 
-                f"⚔️ <b>Match Result</b>\n"
-                f"{match[15]} vs {match[16]}\n"
-                f"Score: {result_text}\n"
-                f"Winner: {winner_name}")
-        
-        if match[5] and match[5] != match[4]:  # player2_chat if different
-            send_telegram(match[5], 
-                f"⚔️ <b>Match Result</b>\n"
-                f"{match[15]} vs {match[16]}\n"
-                f"Score: {result_text}\n"
-                f"Winner: {winner_name}")
+        elif target == 'league':
+            cur.execute("""
+                SELECT DISTINCT u.id, u.chat_id
+                FROM users u
+                JOIN registrations r ON u.id = r.user_id
+                JOIN brackets b ON r.bracket_id = b.id
+                JOIN tournaments t ON b.tournament_id = t.id
+                WHERE t.type = 'league' AND r.status = 'approved' AND u.chat_id IS NOT NULL
+            """)
+            users = cur.fetchall()
+            for user in users:
+                if user[1]:
+                    send_telegram(user[1], f"⚽ <b>League Tournament Update</b>\n\n{message}")
+                cur.execute("""
+                    INSERT INTO user_broadcasts (user_id, broadcast_id)
+                    VALUES (%s, %s)
+                """, (user[0], broadcast_id))
+                
+        elif target == 'specific' and specific_user:
+            cur.execute("SELECT id, chat_id FROM users WHERE telegram_username = %s", (specific_user,))
+            user = cur.fetchone()
+            if user:
+                if user[1]:
+                    send_telegram(user[1], f"📩 <b>Message from Admin</b>\n\n{message}")
+                cur.execute("""
+                    INSERT INTO user_broadcasts (user_id, broadcast_id)
+                    VALUES (%s, %s)
+                """, (user[0], broadcast_id))
         
         # Log action
         cur.execute("""
             INSERT INTO admin_logs (admin_username, action, details)
-            VALUES (%s, 'enter_result', %s)
-        """, (admin_user, f"Match {match_id}: {result_text}"))
+            VALUES (%s, 'broadcast', %s)
+        """, (admin_user, f"Broadcast to {target}: {message[:50]}..."))
         
         conn.commit()
         cur.close()
@@ -923,10 +1046,10 @@ def enter_result():
         return jsonify({'success': True})
         
     except Exception as e:
-        print(f"❌ Result error: {str(e)}")
+        print(f"❌ Broadcast error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 11. Send message to admin
+# 13. Send message to admin
 @app.route('/api/send_message', methods=['POST'])
 def send_message():
     try:
@@ -948,19 +1071,20 @@ def send_message():
         """, (user_id, message))
         msg_id = cur.fetchone()[0]
         
-        # Get user info and notify admin
+        # Get user info
         cur.execute("SELECT telegram_username, chat_id FROM users WHERE id = %s", (user_id,))
         user = cur.fetchone()
         
         if user and user[1]:
             send_telegram(user[1], "📨 Your message has been sent to admin. You'll receive a reply soon.")
         
-        # Notify admin
-        cur.execute("SELECT chat_id FROM users WHERE telegram_username = %s", (OWNER_USERNAME,))
-        admin = cur.fetchone()
-        if admin and admin[0]:
-            send_telegram(admin[0],
-                f"💬 <b>New message from {user[0]}</b>\n\n{message}\n\nReply in admin panel.")
+        # Notify all admins
+        cur.execute("SELECT chat_id FROM users WHERE telegram_username IN ('awnowner', 'awnadmin') AND chat_id IS NOT NULL")
+        admins = cur.fetchall()
+        for admin in admins:
+            if admin[0]:
+                send_telegram(admin[0],
+                    f"💬 <b>New message from {user[0]}</b>\n\n{message}\n\nReply in admin panel.")
         
         conn.commit()
         cur.close()
@@ -972,12 +1096,14 @@ def send_message():
         print(f"❌ Message error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 12. Get messages for admin
+# 14. Get messages for admin
 @app.route('/api/admin/messages', methods=['GET'])
-def get_messages():
+def get_admin_messages():
     try:
         admin_user = request.args.get('admin')
-        if admin_user != OWNER_USERNAME:
+        admin_role = request.args.get('role')
+        
+        if admin_role not in ['owner', 'admin']:
             return jsonify({'success': False, 'message': 'Unauthorized'})
         
         conn = get_db()
@@ -1014,151 +1140,34 @@ def get_messages():
         print(f"❌ Messages error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# 13. Broadcast message (admin only)
-@app.route('/api/admin/broadcast', methods=['POST'])
-def broadcast():
+# 15. Check if user is registered in tournament
+@app.route('/api/check_registration', methods=['GET'])
+def check_registration():
     try:
-        data = request.json
-        admin_user = data.get('admin')
-        target = data.get('target')  # 'all', 'knockout', 'league', 'specific'
-        specific_user = data.get('specific_user')
-        message = data.get('message')
+        user_id = request.args.get('user_id')
+        tournament_id = request.args.get('tournament_id')
         
-        if admin_user != OWNER_USERNAME:
-            return jsonify({'success': False, 'message': 'Unauthorized'})
+        if not user_id or not tournament_id:
+            return jsonify({'success': False, 'message': 'Missing parameters'})
         
         conn = get_db()
         cur = conn.cursor()
         
-        if target == 'all':
-            cur.execute("SELECT chat_id, telegram_username FROM users WHERE chat_id IS NOT NULL AND is_banned = FALSE")
-            users = cur.fetchall()
-            for user in users:
-                if user[0]:
-                    send_telegram(user[0], f"📢 <b>Broadcast Message</b>\n\n{message}")
-                    
-        elif target == 'knockout':
-            cur.execute("""
-                SELECT DISTINCT u.chat_id, u.telegram_username
-                FROM users u
-                JOIN registrations r ON u.id = r.user_id
-                JOIN brackets b ON r.bracket_id = b.id
-                JOIN tournaments t ON b.tournament_id = t.id
-                WHERE t.type = 'knockout' AND r.status = 'approved' AND u.chat_id IS NOT NULL
-            """)
-            users = cur.fetchall()
-            for user in users:
-                if user[0]:
-                    send_telegram(user[0], f"🏆 <b>Knockout Tournament Update</b>\n\n{message}")
-                    
-        elif target == 'league':
-            cur.execute("""
-                SELECT DISTINCT u.chat_id, u.telegram_username
-                FROM users u
-                JOIN registrations r ON u.id = r.user_id
-                JOIN brackets b ON r.bracket_id = b.id
-                JOIN tournaments t ON b.tournament_id = t.id
-                WHERE t.type = 'league' AND r.status = 'approved' AND u.chat_id IS NOT NULL
-            """)
-            users = cur.fetchall()
-            for user in users:
-                if user[0]:
-                    send_telegram(user[0], f"⚽ <b>League Tournament Update</b>\n\n{message}")
-                    
-        elif target == 'specific' and specific_user:
-            cur.execute("SELECT chat_id FROM users WHERE telegram_username = %s", (specific_user,))
-            user = cur.fetchone()
-            if user and user[0]:
-                send_telegram(user[0], f"📩 <b>Message from Admin</b>\n\n{message}")
-        
-        # Log action
         cur.execute("""
-            INSERT INTO admin_logs (admin_username, action, details)
-            VALUES (%s, 'broadcast', %s)
-        """, (admin_user, f"Broadcast to {target}: {message[:50]}..."))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        return jsonify({'success': True})
-        
-    except Exception as e:
-        print(f"❌ Broadcast error: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-# 14. Get tournament history
-@app.route('/api/history', methods=['GET'])
-def get_history():
-    try:
-        conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        cur.execute("""
-            SELECT t.name, t.type, u.telegram_username as winner, t.completed_date
-            FROM tournaments t
-            LEFT JOIN users u ON t.winner_id = u.id
-            WHERE t.status = 'completed'
-            ORDER BY t.completed_date DESC
-            LIMIT 20
-        """)
-        
-        history = cur.fetchall()
-        result = []
-        for h in history:
-            result.append({
-                'name': h['name'],
-                'type': h['type'],
-                'winner': h['winner'] or 'Not finished',
-                'date': h['completed_date'].isoformat() if h['completed_date'] else None
-            })
-        
-        cur.close()
-        conn.close()
-        return jsonify(result)
-        
-    except Exception as e:
-        print(f"❌ History error: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-# 15. Get user registrations
-@app.route('/api/my_registrations', methods=['GET'])
-def my_registrations():
-    try:
-        user_id = request.args.get('user_id')
-        if not user_id:
-            return jsonify({'success': False, 'message': 'User ID required'})
-        
-        conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
-        cur.execute("""
-            SELECT t.name, t.type, b.amount, r.status, r.submitted_date, r.approved_date
-            FROM registrations r
+            SELECT r.id FROM registrations r
             JOIN brackets b ON r.bracket_id = b.id
-            JOIN tournaments t ON b.tournament_id = t.id
-            WHERE r.user_id = %s
-            ORDER BY r.submitted_date DESC
-        """, (user_id,))
+            WHERE r.user_id = %s AND b.tournament_id = %s AND r.status = 'approved'
+        """, (int(user_id), int(tournament_id)))
         
-        regs = cur.fetchall()
-        result = []
-        for r in regs:
-            result.append({
-                'tournament': r['name'],
-                'type': r['type'],
-                'amount': r['amount'],
-                'status': r['status'],
-                'submitted': r['submitted_date'].isoformat() if r['submitted_date'] else None,
-                'approved': r['approved_date'].isoformat() if r['approved_date'] else None
-            })
+        registered = cur.fetchone() is not None
         
         cur.close()
         conn.close()
-        return jsonify(result)
+        
+        return jsonify({'registered': registered})
         
     except Exception as e:
-        print(f"❌ My registrations error: {str(e)}")
+        print(f"❌ Check registration error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # Initialize database on startup
