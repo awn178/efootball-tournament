@@ -728,30 +728,44 @@
         }
 
         // Admin login
-        async function adminLogin() {
-            const username = document.getElementById('adminUsername').value.trim();
-            const password = document.getElementById('adminPassword').value.trim();
-            
-            if (!username || !password) {
-                document.getElementById('loginError').textContent = 'Please enter username and password';
-                return;
-            }
-            
-            // Check credentials
-            if (ADMIN_CREDENTIALS[username] && ADMIN_CREDENTIALS[username].password === password) {
-                adminUsername = username;
-                adminRole = ADMIN_CREDENTIALS[username].role;
-                
-                localStorage.setItem('adminUsername', adminUsername);
-                localStorage.setItem('adminRole', adminRole);
-                
-                showAdminDashboard();
-                loadAllData();
-            } else {
-                document.getElementById('loginError').textContent = 'Invalid username or password';
-            }
-        }
-
+function adminLogin() {
+    const username = document.getElementById('adminUsername').value.trim();
+    const password = document.getElementById('adminPassword').value.trim();
+    
+    // Clear any previous error
+    document.getElementById('loginError').textContent = '';
+    
+    if (!username || !password) {
+        document.getElementById('loginError').textContent = 'Please enter username and password';
+        return;
+    }
+    
+    // Hardcoded credentials check
+    if (username === 'awnowner' && password === '12604') {
+        adminUsername = 'awnowner';
+        adminRole = 'owner';
+        
+        localStorage.setItem('adminUsername', adminUsername);
+        localStorage.setItem('adminRole', adminRole);
+        
+        showAdminDashboard();
+        loadAllData();
+    }
+    else if (username === 'awnadmin' && password === '11512') {
+        adminUsername = 'awnadmin';
+        adminRole = 'admin';
+        
+        localStorage.setItem('adminUsername', adminUsername);
+        localStorage.setItem('adminRole', adminRole);
+        
+        showAdminDashboard();
+        loadAllData();
+    }
+    else {
+        document.getElementById('loginError').textContent = 'Invalid username or password';
+    }
+}
+        
         // Show admin dashboard
         function showAdminDashboard() {
             document.getElementById('loginPage').style.display = 'none';
