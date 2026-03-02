@@ -292,12 +292,16 @@
             font-size: 12px;
         }
         
-        /* NEW: Matches List Styles */
+        /* Matches List Styles */
         .matches-list {
             background: #16213e;
             border-radius: 16px;
             padding: 16px;
             border: 1px solid #2a3a5a;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 500px;
+            -webkit-overflow-scrolling: touch;
             margin-bottom: 16px;
         }
         .round-header {
@@ -313,6 +317,7 @@
             border-radius: 10px;
             margin-bottom: 10px;
             border-left: 3px solid #4CAF50;
+            min-width: 300px;
         }
         .match-item.bye-match {
             border-left-color: #FFC107;
@@ -450,12 +455,17 @@
             color: #8892b0;
             text-align: right;
         }
+        
+        /* FIXED: Scrollable Standings Container */
         .standings-container {
             background: #16213e;
             border-radius: 16px;
             padding: 16px;
             border: 1px solid #2a3a5a;
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: 500px;
+            -webkit-overflow-scrolling: touch;
             margin-bottom: 16px;
         }
         .standings-table {
@@ -471,6 +481,9 @@
             font-weight: 600;
             text-align: center;
             white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         .standings-table td {
             padding: 8px 4px;
@@ -485,7 +498,9 @@
         }
         .bracket-container {
             overflow-x: auto;
+            overflow-y: auto;
             padding: 8px 0;
+            max-height: 500px;
         }
         .bracket-flex {
             display: flex;
@@ -779,7 +794,7 @@
             <div id="tournamentsList"></div>
         </div>
 
-        <!-- MY MATCHES SECTION (NEW) -->
+        <!-- MY MATCHES SECTION -->
         <div id="mymatches-section" class="section">
             <div class="matches-list">
                 <h2 style="color: #4CAF50; font-size: 18px; margin-bottom: 16px;">⚔️ MY MATCHES</h2>
@@ -799,7 +814,7 @@
             </div>
         </div>
 
-        <!-- STANDINGS SECTION -->
+        <!-- STANDINGS SECTION - FIXED with scrollable containers -->
         <div id="standings-section" class="section">
             <div class="standings-container">
                 <h3 style="color: #4CAF50; margin-bottom: 16px; font-size: 16px;">📊 LEAGUE STANDINGS</h3>
@@ -822,7 +837,7 @@
             </div>
         </div>
 
-        <!-- RULES SECTION (NEW) -->
+        <!-- RULES SECTION -->
         <div id="rules-section" class="section">
             <div class="rules-container">
                 <h2 class="rules-title">📜 TOURNAMENT RULES</h2>
@@ -934,6 +949,7 @@
         let selectedBracket = null;
         let selectedBracketId = null;
         let selectedAmount = null;
+        let selectedTournamentId = null;
         let resultUsername = '@awn178';
 
         // ==================== TELEGRAM AUTO-FILL ====================
@@ -1189,7 +1205,7 @@
             loadUserMessages();
         }
 
-        // ==================== TOURNAMENTS ====================
+        // ==================== TOURNAMENTS (FIXED Register Button) ====================
 
         // Load tournaments
         async function loadTournaments() {
@@ -1211,8 +1227,6 @@
                             isRegistered = checkData.registered;
                         } catch (e) {}
                         
-                        let bracketsHtml = '';
-                        let playersHtml = '';
                         let prizesHtml = '';
                         
                         // Show prizes if available
@@ -1226,12 +1240,13 @@
                         }
                         
                         // Create bracket buttons
+                        let bracketsHtml = '';
                         if (t.status !== 'not_started' && !isRegistered) {
                             t.brackets.forEach(b => {
                                 const isFull = b.current >= b.max_players;
                                 bracketsHtml += `
                                     <button class="bracket-btn ${isFull ? 'full' : ''}" 
-                                            onclick="selectBracket(${b.id}, ${b.amount}, '${t.name}', ${isFull})"
+                                            onclick="selectBracket(${b.id}, ${b.amount}, '${t.name}', ${t.id}, ${isFull})"
                                             ${isFull ? 'disabled' : ''}>
                                         ${b.amount}B<br>
                                         <small>${b.current}/${b.max_players}</small>
@@ -1241,6 +1256,7 @@
                         }
                         
                         // Create players list
+                        let playersHtml = '';
                         if (t.players.length > 0) {
                             playersHtml = '<div class="players-list">';
                             t.players.forEach(p => {
@@ -1298,8 +1314,8 @@
             }
         }
 
-        // Select bracket
-        function selectBracket(bracketId, amount, tournamentName, isFull) {
+        // FIXED: Select bracket with tournamentId
+        function selectBracket(bracketId, amount, tournamentName, tournamentId, isFull) {
             if (isFull) {
                 alert('This bracket is full');
                 return;
@@ -1308,13 +1324,17 @@
             selectedBracketId = bracketId;
             selectedAmount = amount;
             selectedTournament = tournamentName;
+            selectedTournamentId = tournamentId;
             
+            // Remove active class from all buttons
             document.querySelectorAll('.bracket-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
+            
+            // Add active class to clicked button
             event.target.classList.add('active');
             
-            // Find the register button for this tournament
+            // Enable the register button for this tournament
             const registerBtn = document.getElementById(`registerBtn_${tournamentId}`);
             if (registerBtn) {
                 registerBtn.disabled = false;
@@ -1406,7 +1426,7 @@
             document.getElementById('successModal').classList.add('show');
         }
 
-        // ==================== MY MATCHES (NEW) ====================
+        // ==================== MY MATCHES ====================
 
         async function loadMyMatches() {
             try {
@@ -1673,7 +1693,7 @@
             }
         }
 
-        // ==================== RULES (NEW) ====================
+        // ==================== RULES ====================
 
         async function loadTournamentForRules() {
             await loadTournamentSelect();
@@ -1791,4 +1811,4 @@
         init();
     </script>
 </body>
-    </html>
+</html>
