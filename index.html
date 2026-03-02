@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>eFootball Tournament</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-    
         * {
             margin: 0;
             padding: 0;
@@ -85,6 +86,11 @@
         .login-input:focus {
             outline: none;
             border-color: #4CAF50;
+        }
+        .login-input[readonly] {
+            background: #253545;
+            color: #4CAF50;
+            font-weight: 500;
         }
         .login-btn {
             background: #4CAF50;
@@ -187,6 +193,14 @@
             font-size: 11px;
             font-weight: 600;
         }
+        .full-badge {
+            background: #f44336;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
         .prize-info {
             background: #1e2a3a;
             padding: 8px 12px;
@@ -277,6 +291,114 @@
             color: #FFD700;
             font-size: 12px;
         }
+        
+        /* NEW: Matches List Styles */
+        .matches-list {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #2a3a5a;
+            margin-bottom: 16px;
+        }
+        .round-header {
+            color: #4CAF50;
+            font-size: 16px;
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #2a3a5a;
+        }
+        .match-item {
+            background: #1e2a3a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4CAF50;
+        }
+        .match-item.bye-match {
+            border-left-color: #FFC107;
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #8892b0;
+        }
+        .match-players {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .match-player {
+            color: #4CAF50;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .match-player:hover {
+            text-decoration: underline;
+        }
+        .match-vs {
+            color: #FFD700;
+            font-weight: 700;
+        }
+        .match-score {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFD700;
+        }
+        .match-result {
+            text-align: center;
+            margin-top: 10px;
+            color: #4CAF50;
+        }
+        .bye-indicator {
+            background: #FFC107;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .launch-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        /* Rules Styles */
+        .rules-container {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #2a3a5a;
+            margin-bottom: 16px;
+        }
+        .rules-title {
+            color: #4CAF50;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .rules-content {
+            background: #1e2a3a;
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            line-height: 1.6;
+            font-size: 14px;
+            white-space: pre-line;
+        }
+        
         .messages-inbox {
             background: #16213e;
             border-radius: 16px;
@@ -327,10 +449,6 @@
             font-size: 10px;
             color: #8892b0;
             text-align: right;
-        }
-        .message-unread {
-            border-left-color: #FFD700;
-            background: #253545;
         }
         .standings-container {
             background: #16213e;
@@ -400,6 +518,7 @@
         .bracket-player {
             color: #4CAF50;
             font-weight: 500;
+            text-decoration: none;
         }
         .bracket-score {
             color: #FFD700;
@@ -602,8 +721,10 @@
             font-size: 18px;
             text-align: center;
         }
+        .tournament-selector {
+            margin-bottom: 20px;
+        }
     </style>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <header>
@@ -616,7 +737,7 @@
             <h2>🔐 LOGIN / REGISTER</h2>
             <div class="input-group">
                 <label>Telegram Username</label>
-                <input type="text" id="telegramUsername" class="login-input" placeholder="@username">
+                <input type="text" id="telegramUsername" class="login-input" placeholder="@username" readonly>
             </div>
             <div class="input-group">
                 <label>PIN (4-6 digits)</label>
@@ -629,7 +750,7 @@
             <button class="login-btn" onclick="login()">LOGIN</button>
             <button class="login-btn secondary" onclick="register()">REGISTER NEW ACCOUNT</button>
             <p style="color: #8892b0; font-size: 12px; margin-top: 12px; text-align: center;">
-                Use PIN to protect your account
+                Your Telegram username is automatically filled from the bot
             </p>
         </div>
 
@@ -645,8 +766,10 @@
         <!-- Tabs -->
         <div class="tabs" id="tabs" style="display: none;">
             <div class="tab active" onclick="switchTab('tournaments')">🏆 TOURNAMENTS</div>
+            <div class="tab" onclick="switchTab('mymatches')">⚔️ MY MATCHES</div>
             <div class="tab" onclick="switchTab('myreg')">📋 MY REG</div>
             <div class="tab" onclick="switchTab('standings')">📊 STANDINGS</div>
+            <div class="tab" onclick="switchTab('rules')">📜 RULES</div>
             <div class="tab" onclick="switchTab('inbox')">📥 INBOX</div>
             <div class="tab" onclick="switchTab('contact')">📞 CONTACT</div>
         </div>
@@ -656,7 +779,17 @@
             <div id="tournamentsList"></div>
         </div>
 
-        <!-- MY REGISTRATIONS SECTION (FIXED) -->
+        <!-- MY MATCHES SECTION (NEW) -->
+        <div id="mymatches-section" class="section">
+            <div class="matches-list">
+                <h2 style="color: #4CAF50; font-size: 18px; margin-bottom: 16px;">⚔️ MY MATCHES</h2>
+                <div id="myMatchesList" class="message-list" style="max-height: 500px;">
+                    <p class="loading">Loading your matches...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY REGISTRATIONS SECTION -->
         <div id="myreg-section" class="section">
             <div class="tournament-card">
                 <h2 style="color: #4CAF50; font-size: 18px; margin-bottom: 16px;">📋 MY REGISTRATIONS</h2>
@@ -689,7 +822,27 @@
             </div>
         </div>
 
-        <!-- INBOX SECTION (FIXED - NOW SHOWS BROADCASTS) -->
+        <!-- RULES SECTION (NEW) -->
+        <div id="rules-section" class="section">
+            <div class="rules-container">
+                <h2 class="rules-title">📜 TOURNAMENT RULES</h2>
+                <select id="rulesTournamentSelect" class="login-input" onchange="loadRules()" style="margin-bottom: 20px;">
+                    <option value="">Select Tournament</option>
+                </select>
+                
+                <div id="leagueRulesDisplay" style="margin-bottom: 30px;">
+                    <h3 style="color: #4CAF50; margin-bottom: 10px;">⚽ LEAGUE RULES</h3>
+                    <div id="leagueRulesContent" class="rules-content">Select a tournament to view rules</div>
+                </div>
+                
+                <div id="knockoutRulesDisplay">
+                    <h3 style="color: #4CAF50; margin-bottom: 10px;">🏆 KNOCKOUT RULES</h3>
+                    <div id="knockoutRulesContent" class="rules-content">Select a tournament to view rules</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INBOX SECTION -->
         <div id="inbox-section" class="section">
             <div class="messages-inbox">
                 <h3>
@@ -702,7 +855,7 @@
             </div>
         </div>
 
-        <!-- CONTACT SECTION (WITH RESULT SUBMISSION) -->
+        <!-- CONTACT SECTION -->
         <div id="contact-section" class="section">
             <div class="contact-section">
                 <h2 style="color: #4CAF50; font-size: 18px; margin-bottom: 16px;">📞 CONTACT</h2>
@@ -713,7 +866,7 @@
                     </div>
                 </div>
                 
-                <!-- RESULT SUBMISSION MENU (NEW) -->
+                <!-- RESULT SUBMISSION MENU -->
                 <div class="result-submission">
                     <h3>📝 SUBMIT MATCH RESULT</h3>
                     <p>Send your match results through Telegram:</p>
@@ -773,6 +926,7 @@
 
     <script>
         // Global variables
+        let tg = window.Telegram?.WebApp;
         let userId = null;
         let username = null;
         let isAdmin = false;
@@ -782,8 +936,44 @@
         let selectedAmount = null;
         let resultUsername = '@awn178';
 
+        // ==================== TELEGRAM AUTO-FILL ====================
+        function initTelegram() {
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                
+                // Get Telegram user data
+                const user = tg.initDataUnsafe?.user;
+                if (user) {
+                    const usernameField = document.getElementById('telegramUsername');
+                    if (usernameField) {
+                        if (user.username) {
+                            usernameField.value = '@' + user.username;
+                        } else if (user.first_name) {
+                            // Use first name if no username
+                            usernameField.value = '@' + user.first_name.toLowerCase().replace(/\s+/g, '');
+                        }
+                        usernameField.readOnly = true;
+                        usernameField.style.background = '#253545';
+                    }
+                    
+                    // Store Telegram data
+                    window.telegramUser = {
+                        id: user.id,
+                        username: user.username ? '@' + user.username : null,
+                        first_name: user.first_name,
+                        chat_id: user.id
+                    };
+                    
+                    console.log('✅ Telegram user detected:', window.telegramUser);
+                }
+            }
+        }
+
         // Check for saved login
         function init() {
+            initTelegram();
+            
             const savedUserId = localStorage.getItem('userId');
             const savedUsername = localStorage.getItem('username');
             const savedPin = localStorage.getItem('pin');
@@ -821,7 +1011,8 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         telegram_username: username,
-                        pin: pin
+                        pin: pin,
+                        chat_id: window.telegramUser?.id || null
                     })
                 });
                 
@@ -842,9 +1033,15 @@
 
         // Register new user
         async function register() {
-            const telegramUsername = document.getElementById('telegramUsername').value.trim();
+            let telegramUsername = document.getElementById('telegramUsername').value.trim();
             const pin = document.getElementById('pin').value.trim();
             const phone = document.getElementById('phoneNumber').value.trim();
+            
+            // If Telegram user is detected and field is empty, use their username
+            if (!telegramUsername && window.telegramUser?.username) {
+                telegramUsername = window.telegramUser.username;
+                document.getElementById('telegramUsername').value = telegramUsername;
+            }
             
             if (!telegramUsername) {
                 alert('Please enter Telegram username');
@@ -863,7 +1060,8 @@
                     body: JSON.stringify({
                         telegram_username: telegramUsername,
                         pin: pin,
-                        phone: phone
+                        phone: phone,
+                        chat_id: window.telegramUser?.id || null
                     })
                 });
                 
@@ -891,8 +1089,14 @@
 
         // Login existing user
         async function login() {
-            const telegramUsername = document.getElementById('telegramUsername').value.trim();
+            let telegramUsername = document.getElementById('telegramUsername').value.trim();
             const pin = document.getElementById('pin').value.trim();
+            
+            // If Telegram user is detected and field is empty, use their username
+            if (!telegramUsername && window.telegramUser?.username) {
+                telegramUsername = window.telegramUser.username;
+                document.getElementById('telegramUsername').value = telegramUsername;
+            }
             
             if (!telegramUsername || !pin) {
                 alert('Please enter username and PIN');
@@ -905,7 +1109,8 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         telegram_username: telegramUsername,
-                        pin: pin
+                        pin: pin,
+                        chat_id: window.telegramUser?.id || null
                     })
                 });
                 
@@ -958,12 +1163,18 @@
             if (tab === 'tournaments') {
                 document.getElementById('tournaments-section').classList.add('active');
                 loadTournaments();
+            } else if (tab === 'mymatches') {
+                document.getElementById('mymatches-section').classList.add('active');
+                loadMyMatches();
             } else if (tab === 'myreg') {
                 document.getElementById('myreg-section').classList.add('active');
                 loadMyRegistrations();
             } else if (tab === 'standings') {
                 document.getElementById('standings-section').classList.add('active');
                 loadTournamentSelect();
+            } else if (tab === 'rules') {
+                document.getElementById('rules-section').classList.add('active');
+                loadTournamentForRules();
             } else if (tab === 'inbox') {
                 document.getElementById('inbox-section').classList.add('active');
                 loadUserMessages();
@@ -978,7 +1189,9 @@
             loadUserMessages();
         }
 
-        // Load tournaments (with prizes)
+        // ==================== TOURNAMENTS ====================
+
+        // Load tournaments
         async function loadTournaments() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -1048,10 +1261,12 @@
                             registerButton = '<p style="color: #FFC107; font-size: 13px; text-align: center;">⏳ Not started</p>';
                         } else if (isRegistered) {
                             registerButton = '<p style="color: #4CAF50; font-size: 13px; text-align: center;">✅ Already registered</p>';
+                        } else if (t.is_full) {
+                            registerButton = '<p style="color: #f44336; font-size: 13px; text-align: center;">🚫 Tournament is full</p>';
                         } else {
                             registerButton = `
                                 <div class="bracket-buttons">${bracketsHtml}</div>
-                                <button class="register-btn" onclick="openRegisterModal()" id="registerBtn" disabled>SELECT AMOUNT</button>
+                                <button class="register-btn" onclick="openRegisterModal()" id="registerBtn_${t.id}" disabled>SELECT AMOUNT</button>
                             `;
                         }
                         
@@ -1059,7 +1274,10 @@
                             <div class="tournament-card">
                                 <div class="tournament-header">
                                     <span class="tournament-name">${t.name}</span>
-                                    <span class="tournament-type">${t.type}</span>
+                                    <div>
+                                        <span class="tournament-type">${t.type}</span>
+                                        ${t.is_full ? '<span class="full-badge" style="margin-left: 8px;">FULL</span>' : ''}
+                                    </div>
                                 </div>
                                 ${prizesHtml}
                                 ${registerButton}
@@ -1096,8 +1314,12 @@
             });
             event.target.classList.add('active');
             
-            document.getElementById('registerBtn').disabled = false;
-            document.getElementById('registerBtn').textContent = `REGISTER ${amount} BIRR`;
+            // Find the register button for this tournament
+            const registerBtn = document.getElementById(`registerBtn_${tournamentId}`);
+            if (registerBtn) {
+                registerBtn.disabled = false;
+                registerBtn.textContent = `REGISTER ${amount} BIRR`;
+            }
         }
 
         // Open registration modal
@@ -1184,7 +1406,109 @@
             document.getElementById('successModal').classList.add('show');
         }
 
-        // Load my registrations (FIXED)
+        // ==================== MY MATCHES (NEW) ====================
+
+        async function loadMyMatches() {
+            try {
+                const res = await fetch(`/api/my_matches?user_id=${userId}`);
+                const matches = await res.json();
+                
+                let html = '';
+                
+                if (!matches || matches.length === 0) {
+                    html = '<p class="no-messages">No matches scheduled yet</p>';
+                } else {
+                    // Group by tournament
+                    const byTournament = {};
+                    matches.forEach(m => {
+                        if (!byTournament[m.tournament_name]) {
+                            byTournament[m.tournament_name] = [];
+                        }
+                        byTournament[m.tournament_name].push(m);
+                    });
+                    
+                    for (const [tournamentName, tournamentMatches] of Object.entries(byTournament)) {
+                        html += `<h3 class="round-header">🏆 ${tournamentName}</h3>`;
+                        
+                        // Group by round
+                        const byRound = {};
+                        tournamentMatches.forEach(m => {
+                            if (!byRound[m.round]) {
+                                byRound[m.round] = [];
+                            }
+                            byRound[m.round].push(m);
+                        });
+                        
+                        for (const [round, roundMatches] of Object.entries(byRound)) {
+                            html += `<h4 class="round-header" style="margin-left: 10px;">Round ${round}</h4>`;
+                            
+                            roundMatches.forEach(m => {
+                                const isBye = m.is_bye;
+                                const opponent = m.player1 === username ? m.player2 : m.player1;
+                                const myScore = m.player1 === username ? m.score1 : m.score2;
+                                const oppScore = m.player1 === username ? m.score2 : m.score1;
+                                
+                                let matchHtml = `
+                                    <div class="match-item ${isBye ? 'bye-match' : ''}">
+                                        <div class="match-header">
+                                            <span>Match #${m.match_number || ''}</span>
+                                            <span>Status: ${m.status}</span>
+                                        </div>
+                                `;
+                                
+                                if (isBye) {
+                                    matchHtml += `
+                                        <div class="match-players">
+                                            <span class="match-player">${username}</span>
+                                            <span class="match-vs">BYE</span>
+                                            <span class="bye-indicator">Auto Advance</span>
+                                        </div>
+                                        <div style="text-align: center; margin-top: 10px;">
+                                            <a href="https://t.me/${resultUsername.replace('@', '')}" target="_blank" class="launch-btn">📤 Submit Result</a>
+                                        </div>
+                                    `;
+                                } else {
+                                    matchHtml += `
+                                        <div class="match-players">
+                                            <a href="https://t.me/${opponent ? opponent.replace('@', '') : ''}" target="_blank" class="match-player">${opponent || 'TBD'}</a>
+                                            <span class="match-vs">VS</span>
+                                            <span class="match-player">${username}</span>
+                                        </div>
+                                    `;
+                                    
+                                    if (m.status === 'completed') {
+                                        matchHtml += `
+                                            <div class="match-result">
+                                                Result: ${myScore} - ${oppScore}
+                                                ${m.winner ? `<br>Winner: ${m.winner}` : ''}
+                                            </div>
+                                        `;
+                                    } else {
+                                        matchHtml += `
+                                            <div style="text-align: center; margin-top: 10px;">
+                                                <a href="https://t.me/${resultUsername.replace('@', '')}" target="_blank" class="launch-btn">📤 Submit Result</a>
+                                            </div>
+                                        `;
+                                    }
+                                }
+                                
+                                matchHtml += `</div>`;
+                                html += matchHtml;
+                            });
+                        }
+                    }
+                }
+                
+                document.getElementById('myMatchesList').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading my matches:', e);
+                document.getElementById('myMatchesList').innerHTML = '<p class="no-messages">Error loading matches</p>';
+            }
+        }
+
+        // ==================== MY REGISTRATIONS ====================
+
         async function loadMyRegistrations() {
             try {
                 const res = await fetch(`/api/my_registrations?user_id=${userId}`);
@@ -1209,20 +1533,10 @@
                             statusText = 'PENDING';
                         }
                         
-                        // Add tournament status indicator
-                        let tournamentStatus = '';
-                        if (r.tournament_status === 'completed') {
-                            tournamentStatus = ' (Completed)';
-                        } else if (r.tournament_status === 'registration') {
-                            tournamentStatus = ' (Open)';
-                        } else if (r.tournament_status === 'not_started') {
-                            tournamentStatus = ' (Not Started)';
-                        }
-                        
                         html += `
                             <div class="player-item">
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 13px;">${r.tournament}${tournamentStatus}</div>
+                                    <div style="font-weight: 600; font-size: 13px;">${r.tournament}</div>
                                     <div style="color: #8892b0; font-size: 11px;">${r.type} - ${r.amount} Birr</div>
                                     <div style="color: #8892b0; font-size: 10px;">Submitted: ${new Date(r.submitted).toLocaleDateString()}</div>
                                 </div>
@@ -1240,7 +1554,8 @@
             }
         }
 
-        // Load tournament select
+        // ==================== STANDINGS ====================
+
         async function loadTournamentSelect() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -1248,6 +1563,7 @@
                 
                 let leagueOptions = '<option value="">Select League</option>';
                 let knockoutOptions = '<option value="">Select Knockout</option>';
+                let rulesOptions = '<option value="">Select Tournament</option>';
                 
                 tournaments.forEach(t => {
                     if (t.type === 'league') {
@@ -1255,15 +1571,16 @@
                     } else {
                         knockoutOptions += `<option value="${t.id}">${t.name}</option>`;
                     }
+                    rulesOptions += `<option value="${t.id}">${t.name} (${t.type})</option>`;
                 });
                 
                 document.getElementById('tournamentSelect').innerHTML = leagueOptions;
                 document.getElementById('knockoutSelect').innerHTML = knockoutOptions;
+                document.getElementById('rulesTournamentSelect').innerHTML = rulesOptions;
                 
             } catch (e) {}
         }
 
-        // Load standings
         async function loadStandings() {
             const tournamentId = document.getElementById('tournamentSelect').value;
             if (!tournamentId) {
@@ -1286,7 +1603,7 @@
                 
                 standings.forEach(s => {
                     html += `<tr>`;
-                    html += `<td style="text-align: left;">${s.username}</td>`;
+                    html += `<td style="text-align: left;"><a href="https://t.me/${s.username.replace('@', '')}" target="_blank" class="player-username">${s.username}</a></td>`;
                     html += `<td>${s.played}</td>`;
                     html += `<td>${s.won}</td>`;
                     html += `<td>${s.drawn}</td>`;
@@ -1306,7 +1623,7 @@
             }
         }
 
-        // Load knockout bracket (FIXED - shows friendly message when empty)
+        // Load knockout bracket
         async function loadBracket() {
             const tournamentId = document.getElementById('knockoutSelect').value;
             if (!tournamentId) {
@@ -1316,7 +1633,8 @@
             
             try {
                 const res = await fetch(`/api/bracket/${tournamentId}`);
-                const rounds = await res.json();
+                const data = await res.json();
+                const rounds = data.rounds || {};
                 
                 // Check if tournament has matches
                 const roundNumbers = Object.keys(rounds);
@@ -1327,7 +1645,7 @@
                 
                 let html = '<div class="bracket-flex">';
                 
-                roundNumbers.sort((a, b) => a - b).forEach(round => {
+                roundNumbers.sort((a, b) => parseInt(a) - parseInt(b)).forEach(round => {
                     html += `<div class="bracket-round">`;
                     html += `<h3>Round ${round}</h3>`;
                     
@@ -1335,11 +1653,11 @@
                         html += `
                             <div class="bracket-match">
                                 <div class="bracket-players">
-                                    <span class="bracket-player">${match.player1 || 'TBD'}</span>
+                                    <a href="https://t.me/${match.player1 ? match.player1.replace('@', '') : ''}" target="_blank" class="bracket-player">${match.player1 || 'TBD'}</a>
                                     <span class="bracket-score">${match.score1}-${match.score2}</span>
-                                    <span class="bracket-player">${match.player2 || 'TBD'}</span>
+                                    <a href="https://t.me/${match.player2 ? match.player2.replace('@', '') : ''}" target="_blank" class="bracket-player">${match.player2 || 'TBD'}</a>
                                 </div>
-                                ${match.winner ? `<div class="bracket-winner">Winner: ${match.winner}</div>` : ''}
+                                ${match.winner ? `<div style="text-align: center; margin-top: 5px;">Winner: <a href="https://t.me/${match.winner.replace('@', '')}" target="_blank" class="player-username">${match.winner}</a></div>` : ''}
                             </div>
                         `;
                     });
@@ -1355,7 +1673,35 @@
             }
         }
 
-        // Load user messages (FIXED - now shows broadcasts)
+        // ==================== RULES (NEW) ====================
+
+        async function loadTournamentForRules() {
+            await loadTournamentSelect();
+        }
+
+        async function loadRules() {
+            const tournamentId = document.getElementById('rulesTournamentSelect').value;
+            if (!tournamentId) {
+                document.getElementById('leagueRulesContent').innerHTML = 'Select a tournament to view rules';
+                document.getElementById('knockoutRulesContent').innerHTML = 'Select a tournament to view rules';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/match_rules/${tournamentId}`);
+                const rules = await res.json();
+                
+                document.getElementById('leagueRulesContent').innerHTML = rules.league_rules || 'No league rules set yet.';
+                document.getElementById('knockoutRulesContent').innerHTML = rules.knockout_rules || 'No knockout rules set yet.';
+                
+            } catch (e) {
+                document.getElementById('leagueRulesContent').innerHTML = 'Error loading rules';
+                document.getElementById('knockoutRulesContent').innerHTML = 'Error loading rules';
+            }
+        }
+
+        // ==================== MESSAGES ====================
+
         async function loadUserMessages() {
             try {
                 const res = await fetch(`/api/user/messages?user_id=${userId}`);
@@ -1445,4 +1791,4 @@
         init();
     </script>
 </body>
-</html>
+    </html>
