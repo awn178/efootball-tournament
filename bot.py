@@ -1,6 +1,5 @@
 import os
 import requests
-import time
 import logging
 from flask import Flask, request, jsonify
 
@@ -16,10 +15,9 @@ ADMIN_USERNAME = "awnadmin"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app for webhook
 app = Flask(__name__)
 
-# Store user chat IDs temporarily (in production, this is in database)
+# Store user chat IDs temporarily
 user_chat_ids = {}
 
 # Send message function
@@ -68,7 +66,32 @@ def remove_webhook():
     logger.info(f"Webhook removed: {response.json()}")
     return response.json()
 
-# Webhook endpoint
+# Home endpoint
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        'status': 'bot is running',
+        'version': '3.0.0',
+        'endpoints': ['/test', '/webhook', '/health'],
+        'bot_username': '@Awntournamentbot'
+    })
+
+# Test endpoint
+@app.route('/test', methods=['GET'])
+def test():
+    return jsonify({
+        'status': 'bot is running',
+        'webhook': '/webhook',
+        'token_valid': bool(BOT_TOKEN),
+        'app_url': APP_URL
+    })
+
+# Health check
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok', 'timestamp': str(datetime.now())})
+
+# Webhook endpoint - MAIN BOT LOGIC
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
@@ -85,6 +108,11 @@ def webhook():
             full_username = f"@{username}"
         else:
             full_username = first_name
+        
+        # Save chat_id for this user
+        if username:
+            user_chat_ids[f"@{username}"] = chat_id
+            logger.info(f"Saved chat_id for @{username}: {chat_id}")
         
         # Handle commands
         if text == '/start':
@@ -129,11 +157,6 @@ This bot will send you notifications about:
                 'reply_markup': keyboard
             }
             requests.post(url, json=payload)
-            
-            # Save chat_id for this user
-            if username:
-                user_chat_ids[f"@{username}"] = chat_id
-                logger.info(f"Saved chat_id for @{username}: {chat_id}")
             
         elif text == '/help':
             help_message = """
@@ -191,12 +214,7 @@ Contact admin @awn178 for help
         else:
             send_message(chat_id, "Use /start to open the app or /help for commands.")
     
-    return {'ok': True}
-
-# Health check endpoint
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'ok', 'bot': 'running'})
+    return jsonify({'ok': True})
 
 # Notification templates
 class NotificationTemplates:
@@ -347,9 +365,15 @@ def notify_broadcast():
 @app.route('/api/notify/test', methods=['GET'])
 def test_notification():
     """Test endpoint"""
-    return jsonify({'status': 'Bot is running', 'webhook': APP_URL + '/webhook'})
+    return jsonify({
+        'status': 'Bot is running',
+        'webhook': APP_URL + '/webhook',
+        'token': BOT_TOKEN[:10] + '...'  # Show partial token for security
+    })
 
-# If running standalone
+# Initialize
+from datetime import datetime
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
@@ -359,13 +383,11 @@ if __name__ == '__main__':
             remove_webhook()
         elif sys.argv[1] == 'test':
             print("Testing bot...")
-            # Test sending a message
-            test_chat_id = input("Enter your chat_id for testing: ")
-            if test_chat_id:
-                send_message(test_chat_id, "🤖 <b>Test message</b>\n\nBot is working correctly!")
-                print("Test message sent!")
+            print(f"Bot Token: {BOT_TOKEN[:10]}...")
+            print(f"App URL: {APP_URL}")
     else:
         # Run Flask app for webhook
-        port = int(os.environ.get('PORT', 5001))
+        port = int(os.environ.get('PORT', 10000))
         logger.info(f"🤖 Telegram Bot starting on port {port}")
+        logger.info(f"📱 Webhook URL: {APP_URL}/webhook")
         app.run(host='0.0.0.0', port=port)
