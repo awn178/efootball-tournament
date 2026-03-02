@@ -549,7 +549,7 @@ def register():
         print(f"❌ Register error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# Get user registrations (FIXED)
+# Get user registrations
 @app.route('/api/my_registrations', methods=['GET'])
 def my_registrations():
     try:
@@ -592,7 +592,7 @@ def my_registrations():
         print(f"❌ My registrations error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# Get user messages (including broadcasts) - FIXED
+# Get user messages (including broadcasts)
 @app.route('/api/user/messages', methods=['GET'])
 def get_user_messages():
     try:
@@ -758,8 +758,6 @@ def get_settings():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # ==================== ADMIN ENDPOINTS ====================
-
-# Admin login is handled in frontend (no endpoint needed)
 
 # Create tournament (with prizes)
 @app.route('/api/admin/create_tournament', methods=['POST'])
@@ -1114,7 +1112,7 @@ def process_registration():
         print(f"❌ Process error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# Send broadcast (FIXED)
+# Send broadcast
 @app.route('/api/admin/broadcast', methods=['POST'])
 def send_broadcast():
     try:
@@ -1263,7 +1261,7 @@ def get_admin_messages():
         print(f"❌ Messages error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# Get admin logs (FIXED)
+# Get admin logs
 @app.route('/api/admin/logs', methods=['GET'])
 def get_admin_logs():
     try:
@@ -1421,7 +1419,8 @@ def get_bracket(tournament_id):
     except Exception as e:
         print(f"❌ Bracket error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
-        # ==================== TELEGRAM BOT ENDPOINTS ====================
+
+# ==================== TELEGRAM BOT ENDPOINTS ====================
 
 @app.route('/bot', methods=['POST'])
 def bot_webhook():
@@ -1434,17 +1433,37 @@ def bot_webhook():
             chat_id = data['message']['chat']['id']
             text = data['message'].get('text', '')
             first_name = data['message']['from'].get('first_name', '')
+            username = data['message']['from'].get('username', '')
             
             if text == '/start':
                 # Send welcome message with app link
-                welcome = f"Welcome {first_name} to eFootball Tournament! Click here to open the app: https://efootball-tournament.onrender.com"
+                welcome = f"👋 Welcome {first_name} to eFootball Tournament!\n\nClick the button below to open the app:"
                 
-                url = f"https://api.telegram.org/bot8406169991:AAHcP5z7eHiKiSFGlRH3fOSDQS5gkjK-0EM/sendMessage"
+                # Create inline keyboard with web app button
+                keyboard = {
+                    'inline_keyboard': [[
+                        {
+                            'text': '🚀 Open Tournament App',
+                            'web_app': {'url': 'https://efootball-tournament.onrender.com'}
+                        }
+                    ]]
+                }
+                
+                url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
                 payload = {
                     'chat_id': chat_id,
-                    'text': welcome
+                    'text': welcome,
+                    'reply_markup': keyboard
                 }
                 requests.post(url, json=payload)
+                print(f"✅ Welcome sent to {chat_id}")
+            
+            elif text == '/help':
+                help_text = "Available commands:\n/start - Open the app\n/help - Show this message"
+                send_telegram(chat_id, help_text)
+            
+            elif text == '/ping':
+                send_telegram(chat_id, "pong 🏓")
         
         return {'ok': True}
     except Exception as e:
@@ -1455,9 +1474,25 @@ def bot_webhook():
 def set_bot_webhook():
     """Set the bot webhook to your main app"""
     webhook_url = "https://efootball-tournament.onrender.com/bot"
-    url = f"https://api.telegram.org/bot8406169991:AAHcP5z7eHiKiSFGlRH3fOSDQS5gkjK-0EM/setWebhook?url={webhook_url}"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={webhook_url}"
     response = requests.get(url)
     return jsonify(response.json())
+
+@app.route('/botstatus', methods=['GET'])
+def bot_status():
+    """Check bot webhook status"""
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/getWebhookInfo"
+    response = requests.get(url)
+    return jsonify(response.json())
+
+@app.route('/deletebot', methods=['GET'])
+def delete_bot_webhook():
+    """Delete the bot webhook"""
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
+    response = requests.get(url)
+    return jsonify(response.json())
+
+# ==================== INITIALIZATION ====================
 
 # Initialize database on startup
 print("🚀 Initializing database...")
@@ -1467,6 +1502,8 @@ if __name__ == '__main__':
     try:
         port = int(os.environ.get('PORT', 5000))
         print(f"🚀 Server starting on port {port}")
+        print(f"🤖 Bot webhook: https://efootball-tournament.onrender.com/bot")
+        print(f"🔗 Set webhook: https://efootball-tournament.onrender.com/setbot")
         app.run(host='0.0.0.0', port=port)
     except Exception as e:
         print(f"❌ Fatal error: {str(e)}")
