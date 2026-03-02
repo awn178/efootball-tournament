@@ -8,6 +8,7 @@ import logging
 import sys
 import requests
 import re
+import math
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -87,6 +88,8 @@ def init_db():
                 status VARCHAR(50) DEFAULT 'not_started',
                 prize_1st INTEGER DEFAULT 0,
                 prize_2nd INTEGER DEFAULT 0,
+                current_round INTEGER DEFAULT 1,
+                total_rounds INTEGER DEFAULT 0,
                 created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 winner_id INTEGER REFERENCES users(id),
                 completed_date TIMESTAMP
@@ -142,17 +145,34 @@ def init_db():
         """)
         print("✅ league_standings table created")
         
-        # Matches
+        # NEW: Match rules table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS match_rules (
+                id SERIAL PRIMARY KEY,
+                tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
+                league_rules TEXT,
+                knockout_rules TEXT,
+                updated_by VARCHAR(255),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(tournament_id)
+            )
+        """)
+        print("✅ match_rules table created")
+        
+        # Matches table - UPDATED with new columns
         cur.execute("""
             CREATE TABLE IF NOT EXISTS matches (
                 id SERIAL PRIMARY KEY,
                 tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
-                round INTEGER,
+                round INTEGER NOT NULL,
+                match_number INTEGER,
                 player1_id INTEGER REFERENCES users(id),
                 player2_id INTEGER REFERENCES users(id),
                 player1_score INTEGER DEFAULT 0,
                 player2_score INTEGER DEFAULT 0,
                 winner_id INTEGER REFERENCES users(id),
+                is_bye BOOLEAN DEFAULT FALSE,
+                round_completed BOOLEAN DEFAULT FALSE,
                 status VARCHAR(50) DEFAULT 'scheduled',
                 match_date TIMESTAMP
             )
@@ -423,11 +443,13 @@ def get_tournaments():
             
             bracket_list = []
             for b in brackets:
+                is_full = b['current_registered'] >= b['max_players']
                 bracket_list.append({
                     'id': b['id'],
                     'amount': b['amount'],
                     'max_players': b['max_players'],
-                    'current': b['current_registered']
+                    'current': b['current_registered'],
+                    'is_full': is_full
                 })
             
             # Get registered players
@@ -448,6 +470,9 @@ def get_tournaments():
                     'amount': p['amount']
                 })
             
+            # Check if tournament is full
+            all_brackets_full = all(b['current'] >= b['max_players'] for b in bracket_list)
+            
             result.append({
                 'id': t['id'],
                 'name': t['name'],
@@ -455,6 +480,9 @@ def get_tournaments():
                 'status': t['status'],
                 'prize_1st': t['prize_1st'],
                 'prize_2nd': t['prize_2nd'],
+                'current_round': t['current_round'],
+                'total_rounds': t['total_rounds'],
+                'is_full': all_brackets_full,
                 'brackets': bracket_list,
                 'players': player_list,
                 'created': t['created_date'].isoformat() if t['created_date'] else None
@@ -483,6 +511,15 @@ def register():
         
         conn = get_db()
         cur = conn.cursor()
+        
+        # Check if bracket is full
+        cur.execute("SELECT current_registered, max_players FROM brackets WHERE id = %s", (bracket_id,))
+        bracket = cur.fetchone()
+        if not bracket:
+            return jsonify({'success': False, 'message': 'Bracket not found'})
+        
+        if bracket[0] >= bracket[1]:
+            return jsonify({'success': False, 'message': 'Tournament bracket is full'})
         
         # Check if already registered in this tournament
         cur.execute("""
@@ -591,6 +628,150 @@ def my_registrations():
     except Exception as e:
         print(f"❌ My registrations error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== NEW: MATCHES ENDPOINTS ====================
+
+# Get all matches for a tournament
+@app.route('/api/matches/<int:tournament_id>', methods=['GET'])
+def get_matches(tournament_id):
+    try:
+        user_id = request.args.get('user_id')  # Optional: filter by user
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        query = """
+            SELECT m.*, 
+                   u1.telegram_username as player1_name, 
+                   u2.telegram_username as player2_name,
+                   w.telegram_username as winner_name
+            FROM matches m
+            LEFT JOIN users u1 ON m.player1_id = u1.id
+            LEFT JOIN users u2 ON m.player2_id = u2.id
+            LEFT JOIN users w ON m.winner_id = w.id
+            WHERE m.tournament_id = %s
+        """
+        params = [tournament_id]
+        
+        if user_id:
+            query += " AND (m.player1_id = %s OR m.player2_id = %s)"
+            params.extend([int(user_id), int(user_id)])
+        
+        query += " ORDER BY m.round, m.match_number"
+        
+        cur.execute(query, params)
+        matches = cur.fetchall()
+        
+        result = []
+        for m in matches:
+            result.append({
+                'id': m['id'],
+                'round': m['round'],
+                'match_number': m['match_number'],
+                'player1': m['player1_name'],
+                'player2': m['player2_name'],
+                'player1_id': m['player1_id'],
+                'player2_id': m['player2_id'],
+                'score1': m['player1_score'],
+                'score2': m['player2_score'],
+                'winner': m['winner_name'],
+                'is_bye': m['is_bye'],
+                'status': m['status']
+            })
+        
+        cur.close()
+        conn.close()
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"❌ Matches error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Get user's matches (My Matches)
+@app.route('/api/my_matches', methods=['GET'])
+def get_my_matches():
+    try:
+        user_id = request.args.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID required'})
+        
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+        cur.execute("""
+            SELECT m.*, t.name as tournament_name, t.type as tournament_type,
+                   u1.telegram_username as player1_name, 
+                   u2.telegram_username as player2_name,
+                   w.telegram_username as winner_name
+            FROM matches m
+            JOIN tournaments t ON m.tournament_id = t.id
+            LEFT JOIN users u1 ON m.player1_id = u1.id
+            LEFT JOIN users u2 ON m.player2_id = u2.id
+            LEFT JOIN users w ON m.winner_id = w.id
+            WHERE m.player1_id = %s OR m.player2_id = %s
+            ORDER BY t.created_date DESC, m.round, m.match_number
+        """, (int(user_id), int(user_id)))
+        
+        matches = cur.fetchall()
+        
+        result = []
+        for m in matches:
+            result.append({
+                'id': m['id'],
+                'tournament_id': m['tournament_id'],
+                'tournament_name': m['tournament_name'],
+                'tournament_type': m['tournament_type'],
+                'round': m['round'],
+                'match_number': m['match_number'],
+                'player1': m['player1_name'],
+                'player2': m['player2_name'],
+                'player1_id': m['player1_id'],
+                'player2_id': m['player2_id'],
+                'score1': m['player1_score'],
+                'score2': m['player2_score'],
+                'winner': m['winner_name'],
+                'is_bye': m['is_bye'],
+                'status': m['status']
+            })
+        
+        cur.close()
+        conn.close()
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"❌ My matches error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== NEW: MATCH RULES ENDPOINTS ====================
+
+# Get match rules for a tournament
+@app.route('/api/match_rules/<int:tournament_id>', methods=['GET'])
+def get_match_rules(tournament_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("SELECT league_rules, knockout_rules FROM match_rules WHERE tournament_id = %s", (tournament_id,))
+        rules = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        if rules:
+            return jsonify({
+                'league_rules': rules[0] or '',
+                'knockout_rules': rules[1] or ''
+            })
+        else:
+            return jsonify({
+                'league_rules': 'League rules will appear here.',
+                'knockout_rules': 'Knockout rules will appear here.'
+            })
+        
+    except Exception as e:
+        print(f"❌ Match rules error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== USER MESSAGES ====================
 
 # Get user messages (including broadcasts)
 @app.route('/api/user/messages', methods=['GET'])
@@ -778,12 +959,24 @@ def create_tournament():
         conn = get_db()
         cur = conn.cursor()
         
+        # Calculate total rounds for knockout (if applicable)
+        total_rounds = 0
+        if tournament_type == 'knockout':
+            max_players = max(b['max_players'] for b in brackets)
+            total_rounds = math.ceil(math.log2(max_players))
+        
         cur.execute("""
-            INSERT INTO tournaments (name, type, status, prize_1st, prize_2nd) 
-            VALUES (%s, %s, 'not_started', %s, %s) 
+            INSERT INTO tournaments (name, type, status, prize_1st, prize_2nd, total_rounds) 
+            VALUES (%s, %s, 'not_started', %s, %s, %s) 
             RETURNING id
-        """, (name, tournament_type, prize_1st, prize_2nd))
+        """, (name, tournament_type, prize_1st, prize_2nd, total_rounds))
         tournament_id = cur.fetchone()[0]
+        
+        # Create empty match rules entry
+        cur.execute("""
+            INSERT INTO match_rules (tournament_id, league_rules, knockout_rules)
+            VALUES (%s, 'League rules will be added soon.', 'Knockout rules will be added soon.')
+        """, (tournament_id,))
         
         for b in brackets:
             cur.execute("""
@@ -965,6 +1158,486 @@ def start_tournament():
     except Exception as e:
         print(f"❌ Start tournament error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== NEW: GENERATE FIXTURES ====================
+
+# Generate league fixtures (round-robin)
+@app.route('/api/admin/generate_league_fixtures/<int:tournament_id>', methods=['POST'])
+def generate_league_fixtures(tournament_id):
+    try:
+        data = request.json
+        admin_user = data.get('admin')
+        admin_role = data.get('role')
+        
+        if admin_role not in ['owner', 'admin']:
+            return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Get all approved players for this tournament
+        cur.execute("""
+            SELECT u.id, u.telegram_username
+            FROM users u
+            JOIN registrations r ON u.id = r.user_id
+            JOIN brackets b ON r.bracket_id = b.id
+            WHERE b.tournament_id = %s AND r.status = 'approved'
+            ORDER BY u.telegram_username
+        """, (tournament_id,))
+        players = cur.fetchall()
+        
+        player_count = len(players)
+        if player_count < 2:
+            return jsonify({'success': False, 'message': 'Not enough players'})
+        
+        # Clear existing matches
+        cur.execute("DELETE FROM matches WHERE tournament_id = %s", (tournament_id,))
+        
+        # Round-robin algorithm
+        player_ids = [p[0] for p in players]
+        
+        # If odd number, add a dummy player (BYE)
+        if player_count % 2 != 0:
+            player_ids.append(None)  # None represents BYE
+            player_count += 1
+        
+        total_rounds = player_count - 1
+        matches_per_round = player_count // 2
+        
+        # Update tournament total rounds
+        cur.execute("UPDATE tournaments SET total_rounds = %s WHERE id = %s", (total_rounds, tournament_id))
+        
+        match_number = 1
+        for round_num in range(1, total_rounds + 1):
+            for match_idx in range(matches_per_round):
+                p1_idx = match_idx
+                p2_idx = player_count - 1 - match_idx
+                
+                p1_id = player_ids[p1_idx]
+                p2_id = player_ids[p2_idx]
+                
+                # Skip if both are None (shouldn't happen)
+                if p1_id is None and p2_id is None:
+                    continue
+                
+                is_bye = (p1_id is None or p2_id is None)
+                
+                cur.execute("""
+                    INSERT INTO matches 
+                    (tournament_id, round, match_number, player1_id, player2_id, is_bye, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, 'scheduled')
+                """, (tournament_id, round_num, match_number, p1_id, p2_id, is_bye))
+                match_number += 1
+            
+            # Rotate players (keep first player fixed)
+            player_ids = [player_ids[0]] + [player_ids[-1]] + player_ids[1:-1]
+        
+        # Log action
+        cur.execute("""
+            INSERT INTO admin_logs (admin_username, action, details)
+            VALUES (%s, 'generate_fixtures', %s)
+        """, (admin_user, f"Generated league fixtures for tournament {tournament_id} with {player_count} players"))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': f'Generated {match_number-1} matches'})
+        
+    except Exception as e:
+        print(f"❌ Generate league fixtures error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Generate knockout fixtures
+@app.route('/api/admin/generate_knockout_fixtures/<int:tournament_id>', methods=['POST'])
+def generate_knockout_fixtures(tournament_id):
+    try:
+        data = request.json
+        admin_user = data.get('admin')
+        admin_role = data.get('role')
+        
+        if admin_role not in ['owner', 'admin']:
+            return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Get all approved players for this tournament
+        cur.execute("""
+            SELECT u.id, u.telegram_username
+            FROM users u
+            JOIN registrations r ON u.id = r.user_id
+            JOIN brackets b ON r.bracket_id = b.id
+            WHERE b.tournament_id = %s AND r.status = 'approved'
+            ORDER BY RANDOM()
+        """, (tournament_id,))
+        players = cur.fetchall()
+        
+        player_count = len(players)
+        if player_count < 2:
+            return jsonify({'success': False, 'message': 'Not enough players'})
+        
+        # Clear existing matches
+        cur.execute("DELETE FROM matches WHERE tournament_id = %s", (tournament_id,))
+        cur.execute("DELETE FROM knockout_matches WHERE tournament_id = %s", (tournament_id,))
+        
+        # Calculate number of rounds
+        total_rounds = math.ceil(math.log2(player_count))
+        next_power_of_2 = 2 ** total_rounds
+        first_round_byes = next_power_of_2 - player_count
+        
+        cur.execute("UPDATE tournaments SET total_rounds = %s WHERE id = %s", (total_rounds, tournament_id))
+        
+        player_ids = [p[0] for p in players]
+        match_number = 1
+        
+        # Create first round matches
+        round1_matches = []
+        i = 0
+        while i < len(player_ids):
+            if first_round_byes > 0:
+                # BYE match (player advances automatically)
+                cur.execute("""
+                    INSERT INTO matches 
+                    (tournament_id, round, match_number, player1_id, player2_id, is_bye, status)
+                    VALUES (%s, 1, %s, %s, NULL, TRUE, 'completed')
+                    RETURNING id
+                """, (tournament_id, match_number, player_ids[i]))
+                match_id = cur.fetchone()[0]
+                round1_matches.append({'match_id': match_id, 'winner_id': player_ids[i]})
+                i += 1
+                first_round_byes -= 1
+            else:
+                # Regular match
+                if i + 1 < len(player_ids):
+                    cur.execute("""
+                        INSERT INTO matches 
+                        (tournament_id, round, match_number, player1_id, player2_id, is_bye, status)
+                        VALUES (%s, 1, %s, %s, %s, FALSE, 'scheduled')
+                        RETURNING id
+                    """, (tournament_id, match_number, player_ids[i], player_ids[i+1]))
+                    match_id = cur.fetchone()[0]
+                    round1_matches.append({'match_id': match_id, 'winner_id': None})
+                    i += 2
+                else:
+                    break
+            match_number += 1
+        
+        # Create knockout structure for subsequent rounds
+        matches_per_round = len(round1_matches)
+        current_round_matches = round1_matches
+        
+        for round_num in range(2, total_rounds + 1):
+            matches_per_round = matches_per_round // 2
+            next_round_matches = []
+            
+            for j in range(matches_per_round):
+                # Create empty match for next round
+                cur.execute("""
+                    INSERT INTO matches 
+                    (tournament_id, round, match_number, player1_id, player2_id, is_bye, status)
+                    VALUES (%s, %s, %s, NULL, NULL, FALSE, 'scheduled')
+                    RETURNING id
+                """, (tournament_id, round_num, match_number))
+                next_match_id = cur.fetchone()[0]
+                match_number += 1
+                
+                # Link previous matches to this one
+                match1 = current_round_matches[j*2]
+                match2 = current_round_matches[j*2 + 1]
+                
+                cur.execute("""
+                    INSERT INTO knockout_matches (tournament_id, round, match_id, next_match_id, position)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (tournament_id, round_num-1, match1['match_id'], next_match_id, j*2))
+                
+                cur.execute("""
+                    INSERT INTO knockout_matches (tournament_id, round, match_id, next_match_id, position)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (tournament_id, round_num-1, match2['match_id'], next_match_id, j*2+1))
+                
+                next_round_matches.append({'match_id': next_match_id, 'winner_id': None})
+            
+            current_round_matches = next_round_matches
+        
+        # Log action
+        cur.execute("""
+            INSERT INTO admin_logs (admin_username, action, details)
+            VALUES (%s, 'generate_fixtures', %s)
+        """, (admin_user, f"Generated knockout fixtures for tournament {tournament_id} with {player_count} players"))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': f'Generated knockout bracket with {total_rounds} rounds'})
+        
+    except Exception as e:
+        print(f"❌ Generate knockout fixtures error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== NEW: SUBMIT MATCH RESULT ====================
+
+@app.route('/api/admin/match_result', methods=['POST'])
+def submit_match_result():
+    try:
+        data = request.json
+        admin_user = data.get('admin')
+        admin_role = data.get('role')
+        match_id = data.get('match_id')
+        score1 = data.get('score1', 0)
+        score2 = data.get('score2', 0)
+        
+        if admin_role not in ['owner', 'admin']:
+            return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Get match details
+        cur.execute("""
+            SELECT m.*, t.type, t.id as tournament_id
+            FROM matches m
+            JOIN tournaments t ON m.tournament_id = t.id
+            WHERE m.id = %s
+        """, (match_id,))
+        match = cur.fetchone()
+        
+        if not match:
+            return jsonify({'success': False, 'message': 'Match not found'})
+        
+        if match[12] == 'completed':  # status
+            return jsonify({'success': False, 'message': 'Match already completed'})
+        
+        # Determine winner
+        winner_id = None
+        if score1 > score2:
+            winner_id = match[4]  # player1_id
+        elif score2 > score1:
+            winner_id = match[5]  # player2_id
+        
+        # Update match
+        cur.execute("""
+            UPDATE matches 
+            SET player1_score = %s, player2_score = %s, winner_id = %s, status = 'completed', round_completed = TRUE
+            WHERE id = %s
+        """, (score1, score2, winner_id, match_id))
+        
+        # If league tournament, update standings
+        if match[13] == 'league':  # type
+            tournament_id = match[14]
+            
+            # Update player1 stats
+            if match[4]:  # player1_id
+                cur.execute("""
+                    UPDATE league_standings 
+                    SET played = played + 1,
+                        goals_for = goals_for + %s,
+                        goals_against = goals_against + %s,
+                        goal_difference = (goals_for + %s) - (goals_against + %s)
+                    WHERE tournament_id = %s AND user_id = %s
+                """, (score1, score2, score1, score2, tournament_id, match[4]))
+                
+                if winner_id == match[4]:
+                    cur.execute("""
+                        UPDATE league_standings 
+                        SET won = won + 1,
+                            points = points + 3
+                        WHERE tournament_id = %s AND user_id = %s
+                    """, (tournament_id, match[4]))
+                elif winner_id is None:
+                    cur.execute("""
+                        UPDATE league_standings 
+                        SET drawn = drawn + 1,
+                            points = points + 1
+                        WHERE tournament_id = %s AND user_id = %s
+                    """, (tournament_id, match[4]))
+                else:
+                    cur.execute("""
+                        UPDATE league_standings 
+                        SET lost = lost + 1
+                        WHERE tournament_id = %s AND user_id = %s
+                    """, (tournament_id, match[4]))
+            
+            # Update player2 stats
+            if match[5]:  # player2_id
+                cur.execute("""
+                    UPDATE league_standings 
+                    SET played = played + 1,
+                        goals_for = goals_for + %s,
+                        goals_against = goals_against + %s,
+                        goal_difference = (goals_for + %s) - (goals_against + %s)
+                    WHERE tournament_id = %s AND user_id = %s
+                """, (score2, score1, score2, score1, tournament_id, match[5]))
+                
+                if winner_id == match[5]:
+                    cur.execute("""
+                        UPDATE league_standings 
+                        SET won = won + 1,
+                            points = points + 3
+                        WHERE tournament_id = %s AND user_id = %s
+                    """, (tournament_id, match[5]))
+                elif winner_id is None:
+                    cur.execute("""
+                        UPDATE league_standings 
+                        SET drawn = drawn + 1,
+                            points = points + 1
+                        WHERE tournament_id = %s AND user_id = %s
+                    """, (tournament_id, match[5]))
+                else:
+                    cur.execute("""
+                        UPDATE league_standings 
+                        SET lost = lost + 1
+                        WHERE tournament_id = %s AND user_id = %s
+                    """, (tournament_id, match[5]))
+        
+        # If knockout, update next match
+        if match[13] == 'knockout' and winner_id:
+            cur.execute("SELECT next_match_id FROM knockout_matches WHERE match_id = %s", (match_id,))
+            next_match = cur.fetchone()
+            
+            if next_match:
+                next_match_id = next_match[0]
+                # Find which position to fill
+                cur.execute("SELECT position FROM knockout_matches WHERE match_id = %s", (match_id,))
+                position = cur.fetchone()[0]
+                
+                if position % 2 == 0:
+                    # Even position -> player1 of next match
+                    cur.execute("UPDATE matches SET player1_id = %s WHERE id = %s", (winner_id, next_match_id))
+                else:
+                    # Odd position -> player2 of next match
+                    cur.execute("UPDATE matches SET player2_id = %s WHERE id = %s", (winner_id, next_match_id))
+        
+        # Log action
+        cur.execute("""
+            INSERT INTO admin_logs (admin_username, action, details)
+            VALUES (%s, 'submit_result', %s)
+        """, (admin_user, f"Submitted result for match {match_id}: {score1}-{score2}"))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"❌ Submit match result error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== NEW: UPDATE MATCH RULES ====================
+
+@app.route('/api/admin/match_rules/<int:tournament_id>', methods=['PUT'])
+def update_match_rules(tournament_id):
+    try:
+        data = request.json
+        admin_user = data.get('admin')
+        admin_role = data.get('role')
+        league_rules = data.get('league_rules')
+        knockout_rules = data.get('knockout_rules')
+        
+        if admin_role not in ['owner', 'admin']:
+            return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO match_rules (tournament_id, league_rules, knockout_rules, updated_by)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (tournament_id) 
+            DO UPDATE SET league_rules = EXCLUDED.league_rules, 
+                         knockout_rules = EXCLUDED.knockout_rules,
+                         updated_by = EXCLUDED.updated_by,
+                         updated_at = CURRENT_TIMESTAMP
+        """, (tournament_id, league_rules, knockout_rules, admin_user))
+        
+        # Log action
+        cur.execute("""
+            INSERT INTO admin_logs (admin_username, action, details)
+            VALUES (%s, 'update_rules', %s)
+        """, (admin_user, f"Updated match rules for tournament {tournament_id}"))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"❌ Update match rules error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== NEW: ADVANCE TO NEXT ROUND ====================
+
+@app.route('/api/admin/next_round/<int:tournament_id>', methods=['POST'])
+def advance_to_next_round(tournament_id):
+    try:
+        data = request.json
+        admin_user = data.get('admin')
+        admin_role = data.get('role')
+        
+        if admin_role not in ['owner', 'admin']:
+            return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Get current round
+        cur.execute("SELECT current_round, total_rounds, type FROM tournaments WHERE id = %s", (tournament_id,))
+        tournament = cur.fetchone()
+        
+        if not tournament:
+            return jsonify({'success': False, 'message': 'Tournament not found'})
+        
+        current_round = tournament[0]
+        total_rounds = tournament[1]
+        tournament_type = tournament[2]
+        
+        if tournament_type == 'league':
+            return jsonify({'success': False, 'message': 'League tournaments dont have rounds to advance'})
+        
+        if current_round >= total_rounds:
+            return jsonify({'success': False, 'message': 'Tournament already completed'})
+        
+        # Check if all matches in current round are completed
+        cur.execute("""
+            SELECT COUNT(*) FROM matches 
+            WHERE tournament_id = %s AND round = %s AND status != 'completed'
+        """, (tournament_id, current_round))
+        pending = cur.fetchone()[0]
+        
+        if pending > 0:
+            return jsonify({'success': False, 'message': f'Complete all matches in round {current_round} first'})
+        
+        # Advance to next round
+        next_round = current_round + 1
+        cur.execute("UPDATE tournaments SET current_round = %s WHERE id = %s", (next_round, tournament_id))
+        
+        # Update next round matches to scheduled if they have both players
+        cur.execute("""
+            UPDATE matches 
+            SET status = 'scheduled' 
+            WHERE tournament_id = %s AND round = %s AND player1_id IS NOT NULL AND player2_id IS NOT NULL
+        """, (tournament_id, next_round))
+        
+        # Log action
+        cur.execute("""
+            INSERT INTO admin_logs (admin_username, action, details)
+            VALUES (%s, 'advance_round', %s)
+        """, (admin_user, f"Advanced tournament {tournament_id} to round {next_round}"))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'next_round': next_round})
+        
+    except Exception as e:
+        print(f"❌ Advance round error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ==================== EXISTING ADMIN ENDPOINTS ====================
 
 # Get pending registrations
 @app.route('/api/admin/pending', methods=['GET'])
@@ -1385,6 +2058,13 @@ def get_bracket(tournament_id):
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
+        # Get tournament info
+        cur.execute("SELECT current_round, total_rounds FROM tournaments WHERE id = %s", (tournament_id,))
+        tourney = cur.fetchone()
+        current_round = tourney[0] if tourney else 1
+        total_rounds = tourney[1] if tourney else 0
+        
+        # Get only matches up to current round
         cur.execute("""
             SELECT m.*, u1.telegram_username as player1, u2.telegram_username as player2,
                    w.telegram_username as winner_name
@@ -1392,9 +2072,9 @@ def get_bracket(tournament_id):
             LEFT JOIN users u1 ON m.player1_id = u1.id
             LEFT JOIN users u2 ON m.player2_id = u2.id
             LEFT JOIN users w ON m.winner_id = w.id
-            WHERE m.tournament_id = %s
-            ORDER BY m.round, m.id
-        """, (tournament_id,))
+            WHERE m.tournament_id = %s AND m.round <= %s
+            ORDER BY m.round, m.match_number
+        """, (tournament_id, current_round))
         
         matches = cur.fetchall()
         
@@ -1402,19 +2082,27 @@ def get_bracket(tournament_id):
         for m in matches:
             if m['round'] not in rounds:
                 rounds[m['round']] = []
-            rounds[m['round']].append({
-                'id': m['id'],
-                'player1': m['player1'],
-                'player2': m['player2'],
-                'score1': m['player1_score'],
-                'score2': m['player2_score'],
-                'winner': m['winner_name'],
-                'status': m['status']
-            })
+            
+            # Only show completed matches or current round matches
+            if m['round'] < current_round or m['status'] == 'completed' or m['round'] == current_round:
+                rounds[m['round']].append({
+                    'id': m['id'],
+                    'player1': m['player1'],
+                    'player2': m['player2'],
+                    'score1': m['player1_score'],
+                    'score2': m['player2_score'],
+                    'winner': m['winner_name'],
+                    'is_bye': m['is_bye'],
+                    'status': m['status']
+                })
         
         cur.close()
         conn.close()
-        return jsonify(rounds)
+        return jsonify({
+            'rounds': rounds,
+            'current_round': current_round,
+            'total_rounds': total_rounds
+        })
         
     except Exception as e:
         print(f"❌ Bracket error: {str(e)}")
@@ -1436,9 +2124,6 @@ def bot_webhook():
             username = data['message']['from'].get('username', '')
             
             if text == '/start':
-                # Send welcome message with app link
-                welcome = f"👋 Welcome {first_name} to eFootball Tournament!\n\nClick the button below to open the app:"
-                
                 # Create inline keyboard with web app button
                 keyboard = {
                     'inline_keyboard': [[
@@ -1448,6 +2133,9 @@ def bot_webhook():
                         }
                     ]]
                 }
+                
+                # Send welcome message with button
+                welcome = f"👋 Welcome {first_name} to eFootball Tournament!\n\nClick the button below to open the app:"
                 
                 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
                 payload = {
