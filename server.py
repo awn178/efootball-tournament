@@ -1421,6 +1421,43 @@ def get_bracket(tournament_id):
     except Exception as e:
         print(f"❌ Bracket error: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
+        # ==================== TELEGRAM BOT ENDPOINTS ====================
+
+@app.route('/bot', methods=['POST'])
+def bot_webhook():
+    """Telegram bot webhook endpoint"""
+    try:
+        data = request.json
+        print(f"🤖 Bot received: {data}")
+        
+        if data and 'message' in data:
+            chat_id = data['message']['chat']['id']
+            text = data['message'].get('text', '')
+            first_name = data['message']['from'].get('first_name', '')
+            
+            if text == '/start':
+                # Send welcome message with app link
+                welcome = f"Welcome {first_name} to eFootball Tournament! Click here to open the app: https://efootball-tournament.onrender.com"
+                
+                url = f"https://api.telegram.org/bot8406169991:AAHcP5z7eHiKiSFGlRH3fOSDQS5gkjK-0EM/sendMessage"
+                payload = {
+                    'chat_id': chat_id,
+                    'text': welcome
+                }
+                requests.post(url, json=payload)
+        
+        return {'ok': True}
+    except Exception as e:
+        print(f"❌ Bot error: {e}")
+        return {'ok': False}, 500
+
+@app.route('/setbot', methods=['GET'])
+def set_bot_webhook():
+    """Set the bot webhook to your main app"""
+    webhook_url = "https://efootball-tournament.onrender.com/bot"
+    url = f"https://api.telegram.org/bot8406169991:AAHcP5z7eHiKiSFGlRH3fOSDQS5gkjK-0EM/setWebhook?url={webhook_url}"
+    response = requests.get(url)
+    return jsonify(response.json())
 
 # Initialize database on startup
 print("🚀 Initializing database...")
