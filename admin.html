@@ -304,6 +304,10 @@
             font-family: 'Poppins', sans-serif;
             font-size: 14px;
         }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
         .bracket-row {
             display: flex;
             gap: 8px;
@@ -338,7 +342,7 @@
             min-width: 120px;
         }
         
-        /* League Standings - Scrollable (FIXED for mobile) */
+        /* League Standings - Scrollable */
         .standings-wrapper {
             overflow-x: auto;
             overflow-y: auto;
@@ -370,45 +374,89 @@
             border-bottom: 1px solid #2a3a5a;
         }
         
-        /* Pending Matches - Mobile Responsive (FIXED) */
-        .matches-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 12px;
-        }
-        .match-item {
+        /* NEW: Fixture Generation Section */
+        .fixture-controls {
             background: #1e2a3a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .fixture-controls h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+        .tournament-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .tournament-selector select {
+            flex: 2;
+            min-width: 200px;
+        }
+        .tournament-selector button {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        /* NEW: Match Management */
+        .match-management {
+            background: #1e2a3a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .match-card {
+            background: #16213e;
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             border-left: 3px solid #4CAF50;
         }
-        .match-header {
+        .match-card.bye-match {
+            border-left-color: #FFC107;
+        }
+        .match-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #8892b0;
+        }
+        .match-players {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .match-title {
-            color: #4CAF50;
-            font-weight: 600;
+            margin: 10px 0;
             font-size: 14px;
         }
-        .match-count {
+        .match-player {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        .match-vs {
             color: #FFD700;
-            font-size: 12px;
         }
-        .match-actions {
+        .score-inputs {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
         }
-        .match-actions .btn {
-            flex: 1;
-            min-width: 100px;
+        .score-inputs input {
+            width: 80px;
+            text-align: center;
+            padding: 12px;
+        }
+        .bye-indicator {
+            background: #FFC107;
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
         }
         
         /* Messages */
@@ -434,6 +482,16 @@
         .message-date {
             color: #8892b0;
             font-size: 11px;
+        }
+        
+        /* Rules Editor */
+        .rules-editor {
+            background: #1e2a3a;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .rules-editor textarea {
+            margin-bottom: 15px;
         }
         
         /* Logs */
@@ -549,6 +607,15 @@
             .user-actions .btn {
                 flex: 1;
             }
+            .tournament-selector {
+                flex-direction: column;
+            }
+            .score-inputs {
+                flex-direction: column;
+            }
+            .score-inputs input {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -606,7 +673,9 @@
                 <div class="tab active" onclick="switchTab('dashboard')">📊 DASHBOARD</div>
                 <div class="tab" onclick="switchTab('tournaments')">🏆 TOURNAMENTS</div>
                 <div class="tab" onclick="switchTab('approvals')">✅ APPROVALS</div>
+                <div class="tab" onclick="switchTab('fixtures')">🎲 FIXTURES</div>
                 <div class="tab" onclick="switchTab('matches')">⚔️ MATCHES</div>
+                <div class="tab" onclick="switchTab('rules')">📜 RULES</div>
                 <div class="tab" onclick="switchTab('messages')">💬 MESSAGES</div>
                 <div class="tab" onclick="switchTab('broadcast')">📢 BROADCAST</div>
                 <div class="tab" onclick="switchTab('users')">👥 USERS</div>
@@ -632,6 +701,10 @@
                                 <span style="color: #4CAF50;">Matches Completed:</span> 
                                 <span id="completedMatches">0</span>
                             </p>
+                            <p style="margin: 10px 0; display: flex; justify-content: space-between;">
+                                <span style="color: #4CAF50;">Current Round:</span> 
+                                <span id="currentRound">0</span>
+                            </p>
                         </div>
                     </div>
                     
@@ -644,7 +717,7 @@
                 </div>
             </div>
 
-            <!-- TOURNAMENTS SECTION (with Edit/Delete and Prizes) -->
+            <!-- TOURNAMENTS SECTION -->
             <div id="tournaments-section" class="section">
                 <div class="card">
                     <h2>➕ CREATE NEW TOURNAMENT</h2>
@@ -665,7 +738,7 @@
                         </select>
                     </div>
                     
-                    <!-- Prize Inputs (NEW) -->
+                    <!-- Prize Inputs -->
                     <div class="prize-row">
                         <div class="input-group" style="flex: 1;">
                             <label>🥇 1st Place Prize (Birr)</label>
@@ -710,19 +783,58 @@
                 </div>
             </div>
 
-            <!-- MATCHES SECTION (FIXED mobile layout) -->
+            <!-- NEW: FIXTURES SECTION -->
+            <div id="fixtures-section" class="section">
+                <div class="card">
+                    <h2>🎲 GENERATE FIXTURES</h2>
+                    
+                    <div class="fixture-controls">
+                        <h3>League Tournament (Round Robin)</h3>
+                        <div class="tournament-selector">
+                            <select id="leagueTournamentSelect">
+                                <option value="">Select League Tournament</option>
+                            </select>
+                            <button class="btn btn-green" onclick="generateLeagueFixtures()">GENERATE LEAGUE FIXTURES</button>
+                        </div>
+                        <p style="color: #8892b0; font-size: 12px;">Generates round-robin fixtures for all players. Handles odd numbers with BYE rounds.</p>
+                    </div>
+                    
+                    <div class="fixture-controls">
+                        <h3>Knockout Tournament (Bracket)</h3>
+                        <div class="tournament-selector">
+                            <select id="knockoutTournamentSelect">
+                                <option value="">Select Knockout Tournament</option>
+                            </select>
+                            <button class="btn btn-green" onclick="generateKnockoutFixtures()">GENERATE KNOCKOUT FIXTURES</button>
+                        </div>
+                        <p style="color: #8892b0; font-size: 12px;">Generates knockout bracket with proper seeding. First round BYEs for non-power-of-2 players.</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📊 TOURNAMENT STATUS</h2>
+                    <div id="tournamentStatus">
+                        <p class="loading">Select a tournament to view status</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: MATCHES SECTION -->
             <div id="matches-section" class="section">
                 <div class="grid-2">
                     <div class="card">
                         <h2>⚔️ PENDING MATCHES</h2>
-                        <div id="pendingMatches" class="matches-grid">
-                            <p class="loading">Loading matches...</p>
+                        <select id="matchTournamentSelect" class="login-input" onchange="loadMatchesForTournament()" style="margin-bottom: 16px;">
+                            <option value="">Select Tournament</option>
+                        </select>
+                        <div id="pendingMatchesList" style="max-height: 500px; overflow-y: auto;">
+                            <p class="loading">Select a tournament</p>
                         </div>
                     </div>
                     
                     <div class="card">
                         <h2>📊 LEAGUE STANDINGS</h2>
-                        <select id="leagueSelect" class="input-group" onchange="loadLeagueStandings()" style="margin-bottom: 16px;">
+                        <select id="leagueSelect" class="login-input" onchange="loadLeagueStandings()" style="margin-bottom: 16px;">
                             <option value="">Select League Tournament</option>
                         </select>
                         <div class="standings-wrapper">
@@ -738,10 +850,42 @@
                 
                 <div class="card">
                     <h2>🏆 KNOCKOUT BRACKETS</h2>
-                    <select id="knockoutSelect" class="input-group" onchange="loadKnockoutBracket()" style="margin-bottom: 16px;">
+                    <select id="knockoutSelect" class="login-input" onchange="loadKnockoutBracket()" style="margin-bottom: 16px;">
                         <option value="">Select Knockout Tournament</option>
                     </select>
                     <div id="knockoutBracket" style="overflow-x: auto;"></div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-blue" onclick="advanceToNextRound()" id="advanceRoundBtn">▶️ ADVANCE TO NEXT ROUND</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: RULES SECTION -->
+            <div id="rules-section" class="section">
+                <div class="card">
+                    <h2>📜 EDIT MATCH RULES</h2>
+                    
+                    <div class="input-group">
+                        <label>Select Tournament</label>
+                        <select id="rulesTournamentSelect" class="login-input" onchange="loadRulesForEdit()">
+                            <option value="">Select Tournament</option>
+                        </select>
+                    </div>
+                    
+                    <div class="rules-editor">
+                        <div class="input-group">
+                            <label>⚽ LEAGUE RULES</label>
+                            <textarea id="leagueRulesText" placeholder="Enter league rules here..."></textarea>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>🏆 KNOCKOUT RULES</label>
+                            <textarea id="knockoutRulesText" placeholder="Enter knockout rules here..."></textarea>
+                        </div>
+                        
+                        <button class="btn btn-green" style="width: 100%;" onclick="saveMatchRules()">💾 SAVE RULES</button>
+                    </div>
                 </div>
             </div>
 
@@ -795,7 +939,7 @@
                 </div>
             </div>
 
-            <!-- SETTINGS SECTION (NEW - Result Username Editor) -->
+            <!-- SETTINGS SECTION -->
             <div id="settings-section" class="section">
                 <div class="card">
                     <h2>⚙️ TOURNAMENT SETTINGS</h2>
@@ -814,7 +958,7 @@
                 </div>
             </div>
 
-            <!-- LOGS SECTION (FIXED) -->
+            <!-- LOGS SECTION -->
             <div id="logs-section" class="section">
                 <div class="card">
                     <h2>📋 ADMIN ACTION LOGS</h2>
@@ -835,7 +979,7 @@
         </div>
     </div>
 
-    <!-- EDIT TOURNAMENT MODAL (NEW) -->
+    <!-- EDIT TOURNAMENT MODAL -->
     <div class="modal" id="editTournamentModal">
         <div class="modal-content">
             <h2>✏️ EDIT TOURNAMENT</h2>
@@ -878,6 +1022,7 @@
         // Global variables
         let adminUsername = '';
         let adminRole = '';
+        let currentTournamentId = null;
 
         // ========== LOGIN FUNCTIONS ==========
         function adminLogin() {
@@ -962,10 +1107,12 @@
             if (tab === 'dashboard') loadStats();
             if (tab === 'tournaments') loadTournamentsList();
             if (tab === 'approvals') loadPendingApprovals();
+            if (tab === 'fixtures') loadTournamentSelectsForFixtures();
             if (tab === 'matches') {
-                loadMatches();
-                loadTournamentSelects();
+                loadTournamentSelectsForMatches();
+                loadLeagueStandingsSelect();
             }
+            if (tab === 'rules') loadTournamentSelectsForRules();
             if (tab === 'messages') loadMessages();
             if (tab === 'users') loadUsers();
             if (tab === 'settings') loadSettings();
@@ -977,12 +1124,10 @@
             loadStats();
             loadTournamentsList();
             loadPendingApprovals();
-            loadMatches();
             loadMessages();
             loadUsers();
             loadSettings();
             loadLogs();
-            loadTournamentSelects();
         }
 
         // ========== STATS ==========
@@ -1105,7 +1250,6 @@
                     document.getElementById('prize1st').value = '0';
                     document.getElementById('prize2nd').value = '0';
                     loadTournamentsList();
-                    loadTournamentSelects();
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -1148,6 +1292,7 @@
                                 <p style="color: #8892b0; font-size: 13px;">Brackets: ${bracketsText}</p>
                                 ${prizesText}
                                 <p style="color: #8892b0; font-size: 13px;">Players: ${t.players.length}</p>
+                                <p style="color: #8892b0; font-size: 13px;">Current Round: ${t.current_round || 1}</p>
                                 <div class="tournament-actions">
                                     ${adminRole === 'owner' && t.status === 'not_started' ? 
                                         `<button class="btn btn-green" onclick="startTournament(${t.id})">▶️ START</button>` : ''}
@@ -1189,7 +1334,6 @@
             } catch (e) {}
         }
 
-        // Edit Tournament Functions
         function editTournament(id, name, prize1st, prize2nd, status) {
             document.getElementById('editTournamentId').value = id;
             document.getElementById('editTournamentName').value = name;
@@ -1256,7 +1400,6 @@
                 if (data.success) {
                     alert('✅ Tournament deleted!');
                     loadTournamentsList();
-                    loadTournamentSelects();
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -1362,55 +1505,283 @@
             document.getElementById('screenshotModal').classList.remove('show');
         }
 
-        // ========== MATCHES ==========
-        async function loadMatches() {
+        // ========== NEW: FIXTURE GENERATION ==========
+        async function loadTournamentSelectsForFixtures() {
             try {
                 const res = await fetch('/api/tournaments');
                 const tournaments = await res.json();
                 
-                let html = '';
+                let leagueOptions = '<option value="">Select League Tournament</option>';
+                let knockoutOptions = '<option value="">Select Knockout Tournament</option>';
                 
                 tournaments.forEach(t => {
-                    if (t.players.length > 0) {
-                        html += `
-                            <div class="match-item">
-                                <div class="match-header">
-                                    <span class="match-title">${t.name}</span>
-                                    <span class="match-count">${t.players.length} players</span>
-                                </div>
-                                <div class="match-actions">
-                                    ${t.players.length >= 2 ? 
-                                        `<button class="btn btn-blue" onclick="alert('Generate fixtures for ${t.name}')">🎲 GENERATE FIXTURES</button>` : ''}
-                                </div>
-                            </div>
-                        `;
+                    if (t.type === 'league') {
+                        leagueOptions += `<option value="${t.id}">${t.name} (${t.players.length} players)</option>`;
+                    } else {
+                        knockoutOptions += `<option value="${t.id}">${t.name} (${t.players.length} players)</option>`;
                     }
                 });
                 
-                if (!html) html = '<p style="color: #8892b0;">No pending matches</p>';
-                document.getElementById('pendingMatches').innerHTML = html;
+                document.getElementById('leagueTournamentSelect').innerHTML = leagueOptions;
+                document.getElementById('knockoutTournamentSelect').innerHTML = knockoutOptions;
                 
             } catch (e) {}
         }
 
-        async function loadTournamentSelects() {
+        async function generateLeagueFixtures() {
+            const tournamentId = document.getElementById('leagueTournamentSelect').value;
+            if (!tournamentId) {
+                alert('Please select a tournament');
+                return;
+            }
+            
+            if (!confirm('Generate league fixtures? This will delete any existing matches.')) return;
+            
+            try {
+                const res = await fetch(`/api/admin/generate_league_fixtures/${tournamentId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function generateKnockoutFixtures() {
+            const tournamentId = document.getElementById('knockoutTournamentSelect').value;
+            if (!tournamentId) {
+                alert('Please select a tournament');
+                return;
+            }
+            
+            if (!confirm('Generate knockout bracket? This will delete any existing matches.')) return;
+            
+            try {
+                const res = await fetch(`/api/admin/generate_knockout_fixtures/${tournamentId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // ========== NEW: MATCH MANAGEMENT ==========
+        async function loadTournamentSelectsForMatches() {
             try {
                 const res = await fetch('/api/tournaments');
                 const tournaments = await res.json();
                 
-                let leagueOptions = '<option value="">Select League</option>';
-                let knockoutOptions = '<option value="">Select Knockout</option>';
+                let options = '<option value="">Select Tournament</option>';
+                tournaments.forEach(t => {
+                    options += `<option value="${t.id}">${t.name} (${t.type})</option>`;
+                });
+                
+                document.getElementById('matchTournamentSelect').innerHTML = options;
+                
+            } catch (e) {}
+        }
+
+        async function loadMatchesForTournament() {
+            const tournamentId = document.getElementById('matchTournamentSelect').value;
+            if (!tournamentId) {
+                document.getElementById('pendingMatchesList').innerHTML = '<p class="loading">Select a tournament</p>';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/matches/${tournamentId}`);
+                const matches = await res.json();
+                
+                let html = '';
+                
+                if (!matches || matches.length === 0) {
+                    html = '<p class="info-message">No matches generated yet. Go to FIXTURES tab to generate.</p>';
+                } else {
+                    // Group by round
+                    const byRound = {};
+                    matches.forEach(m => {
+                        if (!byRound[m.round]) {
+                            byRound[m.round] = [];
+                        }
+                        byRound[m.round].push(m);
+                    });
+                    
+                    for (const round in byRound) {
+                        html += `<h3 class="round-header">Round ${round}</h3>`;
+                        
+                        byRound[round].forEach(m => {
+                            const isBye = m.is_bye;
+                            const matchId = m.id;
+                            
+                            html += `
+                                <div class="match-card ${isBye ? 'bye-match' : ''}" id="match-${matchId}">
+                                    <div class="match-info">
+                                        <span>Match #${m.match_number || ''}</span>
+                                        <span>Status: ${m.status}</span>
+                                    </div>
+                            `;
+                            
+                            if (isBye) {
+                                html += `
+                                    <div class="match-players">
+                                        <span class="match-player">${m.player1 || 'BYE'}</span>
+                                        <span class="match-vs">→</span>
+                                        <span class="bye-indicator">Auto Advance</span>
+                                    </div>
+                                    <div style="text-align: center; color: #4CAF50;">
+                                        Winner: ${m.player1 || 'TBD'}
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="match-players">
+                                        <span class="match-player">${m.player1 || 'TBD'}</span>
+                                        <span class="match-vs">VS</span>
+                                        <span class="match-player">${m.player2 || 'TBD'}</span>
+                                    </div>
+                                `;
+                                
+                                if (m.status === 'completed') {
+                                    html += `
+                                        <div style="text-align: center; margin: 10px 0;">
+                                            <span class="match-score">${m.score1} - ${m.score2}</span>
+                                        </div>
+                                        <div style="text-align: center; color: #4CAF50;">
+                                            Winner: ${m.winner || 'TBD'}
+                                        </div>
+                                    `;
+                                } else {
+                                    html += `
+                                        <div class="score-inputs">
+                                            <input type="number" id="score1-${matchId}" placeholder="Score 1" min="0" value="0">
+                                            <span>-</span>
+                                            <input type="number" id="score2-${matchId}" placeholder="Score 2" min="0" value="0">
+                                        </div>
+                                        <button class="btn btn-green" style="width: 100%;" onclick="submitMatchResult(${matchId})">SUBMIT RESULT</button>
+                                    `;
+                                }
+                            }
+                            
+                            html += `</div>`;
+                        });
+                    }
+                }
+                
+                document.getElementById('pendingMatchesList').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('pendingMatchesList').innerHTML = '<p style="color: #f44336;">Error loading matches</p>';
+            }
+        }
+
+        async function submitMatchResult(matchId) {
+            const score1 = document.getElementById(`score1-${matchId}`).value;
+            const score2 = document.getElementById(`score2-${matchId}`).value;
+            
+            if (score1 === '' || score2 === '') {
+                alert('Please enter both scores');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/admin/match_result', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        match_id: matchId,
+                        score1: parseInt(score1),
+                        score2: parseInt(score2)
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Result submitted!');
+                    loadMatchesForTournament();
+                    loadLeagueStandings();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function advanceToNextRound() {
+            const tournamentId = document.getElementById('knockoutSelect').value;
+            if (!tournamentId) {
+                alert('Please select a knockout tournament');
+                return;
+            }
+            
+            if (!confirm('Advance to next round? Make sure all current round matches are completed.')) return;
+            
+            try {
+                const res = await fetch(`/api/admin/next_round/${tournamentId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert(`✅ Advanced to round ${data.next_round}`);
+                    loadKnockoutBracket();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // ========== LEAGUE STANDINGS ==========
+        async function loadLeagueStandingsSelect() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let leagueOptions = '<option value="">Select League Tournament</option>';
                 
                 tournaments.forEach(t => {
                     if (t.type === 'league') {
                         leagueOptions += `<option value="${t.id}">${t.name}</option>`;
-                    } else {
-                        knockoutOptions += `<option value="${t.id}">${t.name}</option>`;
                     }
                 });
                 
                 document.getElementById('leagueSelect').innerHTML = leagueOptions;
-                document.getElementById('knockoutSelect').innerHTML = knockoutOptions;
                 
             } catch (e) {}
         }
@@ -1443,16 +1814,18 @@
             } catch (e) {}
         }
 
+        // ========== KNOCKOUT BRACKET ==========
         async function loadKnockoutBracket() {
             const tournamentId = document.getElementById('knockoutSelect').value;
             if (!tournamentId) return;
             
             try {
                 const res = await fetch(`/api/bracket/${tournamentId}`);
-                const rounds = await res.json();
+                const data = await res.json();
+                const rounds = data.rounds || {};
                 
                 let html = '<div style="display: flex; gap: 20px; overflow-x: auto;">';
-                const roundNumbers = Object.keys(rounds).sort((a, b) => a - b);
+                const roundNumbers = Object.keys(rounds).sort((a, b) => parseInt(a) - parseInt(b));
                 
                 if (roundNumbers.length === 0) {
                     html = '<p style="color: #8892b0;">No matches yet</p>';
@@ -1467,6 +1840,7 @@
                                         <span>${match.score1}-${match.score2}</span>
                                         <span>${match.player2 || 'TBD'}</span>
                                     </div>
+                                    ${match.winner ? `<div style="text-align: center; margin-top: 5px;">Winner: ${match.winner}</div>` : ''}
                                 </div>
                             `;
                         });
@@ -1478,6 +1852,70 @@
                 document.getElementById('knockoutBracket').innerHTML = html;
                 
             } catch (e) {}
+        }
+
+        // ========== NEW: RULES MANAGEMENT ==========
+        async function loadTournamentSelectsForRules() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let options = '<option value="">Select Tournament</option>';
+                tournaments.forEach(t => {
+                    options += `<option value="${t.id}">${t.name} (${t.type})</option>`;
+                });
+                
+                document.getElementById('rulesTournamentSelect').innerHTML = options;
+                
+            } catch (e) {}
+        }
+
+        async function loadRulesForEdit() {
+            const tournamentId = document.getElementById('rulesTournamentSelect').value;
+            if (!tournamentId) return;
+            
+            try {
+                const res = await fetch(`/api/match_rules/${tournamentId}`);
+                const rules = await res.json();
+                
+                document.getElementById('leagueRulesText').value = rules.league_rules || '';
+                document.getElementById('knockoutRulesText').value = rules.knockout_rules || '';
+                
+            } catch (e) {}
+        }
+
+        async function saveMatchRules() {
+            const tournamentId = document.getElementById('rulesTournamentSelect').value;
+            if (!tournamentId) {
+                alert('Please select a tournament');
+                return;
+            }
+            
+            const leagueRules = document.getElementById('leagueRulesText').value;
+            const knockoutRules = document.getElementById('knockoutRulesText').value;
+            
+            try {
+                const res = await fetch(`/api/admin/match_rules/${tournamentId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        league_rules: leagueRules,
+                        knockout_rules: knockoutRules
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Rules saved!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         // ========== MESSAGES ==========
@@ -1584,7 +2022,12 @@
         }
 
         function searchUsers(query) {}
-        function messageUser(username) { alert(`Messaging ${username} - feature coming soon`); }
+        function messageUser(username) { 
+            document.getElementById('broadcastTarget').value = 'specific';
+            document.getElementById('specificUser').value = username;
+            document.getElementById('specificUserGroup').style.display = 'block';
+            switchTab('broadcast');
+        }
         function banUser(username) { 
             if (confirm(`Ban ${username}?`)) {
                 alert(`User ${username} banned`);
@@ -1664,4 +2107,4 @@
         init();
     </script>
 </body>
-                                    </html>
+    </html>
