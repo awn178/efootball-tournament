@@ -374,7 +374,7 @@
             border-bottom: 1px solid #2a3a5a;
         }
         
-        /* NEW: Fixture Generation Section */
+        /* Fixture Generation Section */
         .fixture-controls {
             background: #1e2a3a;
             padding: 20px;
@@ -400,7 +400,7 @@
             min-width: 120px;
         }
         
-        /* NEW: Match Management */
+        /* Match Management */
         .match-management {
             background: #1e2a3a;
             padding: 20px;
@@ -457,6 +457,27 @@
             border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
+        }
+        
+        /* NEW: Manual Registration Section */
+        .manual-reg-section {
+            background: #1e2a3a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #4CAF50;
+            margin-top: 20px;
+        }
+        .manual-reg-section h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-text {
+            color: #FFC107;
+            font-size: 12px;
+            margin-top: 5px;
         }
         
         /* Messages */
@@ -771,6 +792,36 @@
                         <p class="loading">Loading tournaments...</p>
                     </div>
                 </div>
+
+                <!-- NEW: MANUAL REGISTRATION SECTION -->
+                <div class="card">
+                    <h2>👤 MANUAL REGISTRATION</h2>
+                    <p style="color: #8892b0; font-size: 12px; margin-bottom: 15px;">
+                        Register a player manually (for payments done outside the system). If username doesn't exist, account will be created automatically.
+                    </p>
+                    
+                    <div class="input-group">
+                        <label>Select Tournament</label>
+                        <select id="manualTournamentSelect" class="login-input">
+                            <option value="">Select Tournament</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Select Bracket</label>
+                        <select id="manualBracketSelect" class="login-input" disabled>
+                            <option value="">First select tournament</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Telegram Username</label>
+                        <input type="text" id="manualUsername" class="login-input" placeholder="@username">
+                        <div class="info-text">Username will be created with @ if not entered</div>
+                    </div>
+                    
+                    <button class="btn btn-green" style="width: 100%;" onclick="manualRegister()" id="manualRegisterBtn">✅ REGISTER PLAYER</button>
+                </div>
             </div>
 
             <!-- APPROVALS SECTION -->
@@ -783,7 +834,7 @@
                 </div>
             </div>
 
-            <!-- NEW: FIXTURES SECTION -->
+            <!-- FIXTURES SECTION -->
             <div id="fixtures-section" class="section">
                 <div class="card">
                     <h2>🎲 GENERATE FIXTURES</h2>
@@ -819,7 +870,7 @@
                 </div>
             </div>
 
-            <!-- NEW: MATCHES SECTION -->
+            <!-- MATCHES SECTION -->
             <div id="matches-section" class="section">
                 <div class="grid-2">
                     <div class="card">
@@ -827,7 +878,7 @@
                         <select id="matchTournamentSelect" class="login-input" onchange="loadMatchesForTournament()" style="margin-bottom: 16px;">
                             <option value="">Select Tournament</option>
                         </select>
-                        <div id="pendingMatchesList" style="max-height: 500px; overflow-y: auto;">
+                        <div id="pendingMatchesList" style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
                             <p class="loading">Select a tournament</p>
                         </div>
                     </div>
@@ -861,7 +912,7 @@
                 </div>
             </div>
 
-            <!-- NEW: RULES SECTION -->
+            <!-- RULES SECTION -->
             <div id="rules-section" class="section">
                 <div class="card">
                     <h2>📜 EDIT MATCH RULES</h2>
@@ -1105,7 +1156,10 @@
             document.getElementById(tab + '-section').classList.add('active');
             
             if (tab === 'dashboard') loadStats();
-            if (tab === 'tournaments') loadTournamentsList();
+            if (tab === 'tournaments') {
+                loadTournamentsList();
+                loadManualTournaments();
+            }
             if (tab === 'approvals') loadPendingApprovals();
             if (tab === 'fixtures') loadTournamentSelectsForFixtures();
             if (tab === 'matches') {
@@ -1298,7 +1352,7 @@
                                         `<button class="btn btn-green" onclick="startTournament(${t.id})">▶️ START</button>` : ''}
                                     ${adminRole === 'owner' ? 
                                         `<button class="btn btn-blue" onclick="editTournament(${t.id}, '${t.name}', ${t.prize_1st}, ${t.prize_2nd}, '${t.status}')">✏️ EDIT</button>` : ''}
-                                    ${adminRole === 'owner' && t.players.length === 0 ? 
+                                    ${adminRole === 'owner' ? 
                                         `<button class="btn btn-red" onclick="deleteTournament(${t.id})">🗑️ DELETE</button>` : ''}
                                 </div>
                             </div>
@@ -1406,6 +1460,101 @@
             } catch (e) {}
         }
 
+        // ========== NEW: MANUAL REGISTRATION ==========
+        async function loadManualTournaments() {
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                
+                let options = '<option value="">Select Tournament</option>';
+                tournaments.forEach(t => {
+                    if (t.status === 'registration') {
+                        options += `<option value="${t.id}">${t.name} (${t.type})</option>`;
+                    }
+                });
+                
+                document.getElementById('manualTournamentSelect').innerHTML = options;
+                
+            } catch (e) {}
+        }
+
+        // When tournament selected, load brackets
+        document.getElementById('manualTournamentSelect')?.addEventListener('change', async function() {
+            const tournamentId = this.value;
+            const bracketSelect = document.getElementById('manualBracketSelect');
+            
+            if (!tournamentId) {
+                bracketSelect.innerHTML = '<option value="">First select tournament</option>';
+                bracketSelect.disabled = true;
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/tournaments');
+                const tournaments = await res.json();
+                const tournament = tournaments.find(t => t.id == tournamentId);
+                
+                if (tournament) {
+                    let options = '<option value="">Select Bracket</option>';
+                    tournament.brackets.forEach(b => {
+                        const available = b.max_players - b.current;
+                        options += `<option value="${b.id}">${b.amount} Birr (${b.current}/${b.max_players}) - ${available} spots left</option>`;
+                    });
+                    bracketSelect.innerHTML = options;
+                    bracketSelect.disabled = false;
+                }
+            } catch (e) {}
+        });
+
+        async function manualRegister() {
+            const tournamentId = document.getElementById('manualTournamentSelect').value;
+            const bracketId = document.getElementById('manualBracketSelect').value;
+            let username = document.getElementById('manualUsername').value.trim();
+            
+            if (!tournamentId || !bracketId || !username) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            // Add @ if missing
+            if (!username.startsWith('@')) {
+                username = '@' + username;
+            }
+            
+            if (!confirm(`Register ${username} in this tournament?`)) return;
+            
+            try {
+                const res = await fetch('/api/admin/manual_register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        username: username,
+                        tournament_id: tournamentId,
+                        bracket_id: bracketId
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert(`✅ Player registered successfully! ${data.message || ''}`);
+                    document.getElementById('manualUsername').value = '';
+                    loadTournamentsList();
+                    
+                    // Reset selections
+                    document.getElementById('manualTournamentSelect').value = '';
+                    document.getElementById('manualBracketSelect').innerHTML = '<option value="">First select tournament</option>';
+                    document.getElementById('manualBracketSelect').disabled = true;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
         // ========== APPROVALS ==========
         async function loadPendingApprovals() {
             try {
@@ -1505,7 +1654,7 @@
             document.getElementById('screenshotModal').classList.remove('show');
         }
 
-        // ========== NEW: FIXTURE GENERATION ==========
+        // ========== FIXTURE GENERATION ==========
         async function loadTournamentSelectsForFixtures() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -1590,7 +1739,7 @@
             }
         }
 
-        // ========== NEW: MATCH MANAGEMENT ==========
+        // ========== MATCH MANAGEMENT ==========
         async function loadTournamentSelectsForMatches() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -1622,7 +1771,6 @@
                 if (!matches || matches.length === 0) {
                     html = '<p class="info-message">No matches generated yet. Go to FIXTURES tab to generate.</p>';
                 } else {
-                    // Group by round
                     const byRound = {};
                     matches.forEach(m => {
                         if (!byRound[m.round]) {
@@ -1632,7 +1780,7 @@
                     });
                     
                     for (const round in byRound) {
-                        html += `<h3 class="round-header">Round ${round}</h3>`;
+                        html += `<h3 class="round-header" style="color: #4CAF50; margin: 15px 0 10px;">Round ${round}</h3>`;
                         
                         byRound[round].forEach(m => {
                             const isBye = m.is_bye;
@@ -1653,7 +1801,7 @@
                                         <span class="match-vs">→</span>
                                         <span class="bye-indicator">Auto Advance</span>
                                     </div>
-                                    <div style="text-align: center; color: #4CAF50;">
+                                    <div style="text-align: center; color: #4CAF50; margin-top: 10px;">
                                         Winner: ${m.player1 || 'TBD'}
                                     </div>
                                 `;
@@ -1669,7 +1817,7 @@
                                 if (m.status === 'completed') {
                                     html += `
                                         <div style="text-align: center; margin: 10px 0;">
-                                            <span class="match-score">${m.score1} - ${m.score2}</span>
+                                            <span style="font-size: 18px; font-weight: 700; color: #FFD700;">${m.score1} - ${m.score2}</span>
                                         </div>
                                         <div style="text-align: center; color: #4CAF50;">
                                             Winner: ${m.winner || 'TBD'}
@@ -1854,7 +2002,7 @@
             } catch (e) {}
         }
 
-        // ========== NEW: RULES MANAGEMENT ==========
+        // ========== RULES MANAGEMENT ==========
         async function loadTournamentSelectsForRules() {
             try {
                 const res = await fetch('/api/tournaments');
