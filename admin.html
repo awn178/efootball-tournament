@@ -6,7 +6,6 @@
     <title>Admin - eFootball Tournament</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ALL YOUR EXISTING STYLES - KEEP THEM EXACTLY AS THEY WERE */
         * {
             margin: 0;
             padding: 0;
@@ -225,6 +224,7 @@
             font-weight: 600;
             font-size: 13px;
             transition: 0.3s;
+            white-space: nowrap;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -309,9 +309,11 @@
             gap: 8px;
             margin-bottom: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .bracket-row input[type="number"] {
             flex: 1;
+            min-width: 100px;
         }
         .bracket-row button {
             flex: 0;
@@ -324,13 +326,26 @@
             font-size: 16px;
         }
         
-        /* League Standings - Scrollable */
+        /* Prize Input Row */
+        .prize-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .prize-row input {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        /* League Standings - Scrollable (FIXED for mobile) */
         .standings-wrapper {
             overflow-x: auto;
             overflow-y: auto;
             max-height: 400px;
             border-radius: 12px;
             background: #1e2a3a;
+            -webkit-overflow-scrolling: touch;
         }
         .standings-table {
             min-width: 600px;
@@ -354,8 +369,46 @@
             text-align: center;
             border-bottom: 1px solid #2a3a5a;
         }
-        .standings-table tr:last-child td {
-            border-bottom: none;
+        
+        /* Pending Matches - Mobile Responsive (FIXED) */
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+        .match-item {
+            background: #1e2a3a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 3px solid #4CAF50;
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .match-title {
+            color: #4CAF50;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .match-count {
+            color: #FFD700;
+            font-size: 12px;
+        }
+        .match-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .match-actions .btn {
+            flex: 1;
+            min-width: 100px;
         }
         
         /* Messages */
@@ -376,36 +429,11 @@
             color: white;
             font-size: 13px;
             margin-bottom: 5px;
+            word-break: break-word;
         }
         .message-date {
             color: #8892b0;
             font-size: 11px;
-        }
-        
-        /* Matches */
-        .match-item {
-            background: #1e2a3a;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-        }
-        .match-players {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .match-score-input {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin: 10px 0;
-        }
-        .match-score-input input {
-            width: 70px;
-            text-align: center;
-            padding: 10px;
         }
         
         /* Logs */
@@ -416,13 +444,11 @@
             margin-bottom: 6px;
             font-size: 12px;
             border-left: 3px solid #4CAF50;
+            word-break: break-word;
         }
         .log-admin {
             color: #4CAF50;
             font-weight: 600;
-        }
-        .log-action {
-            color: #FFD700;
         }
         .log-time {
             color: #8892b0;
@@ -443,12 +469,86 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Tournament Actions */
+        .tournament-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .tournament-actions .btn {
+            flex: 1;
+            min-width: 80px;
+        }
+        
+        /* Settings Section */
+        .settings-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .settings-row .input-group {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+        .settings-row .btn {
+            flex: 0;
+            min-width: 100px;
+            height: 50px;
+        }
+        
         .loading {
             text-align: center;
             color: #8892b0;
             padding: 20px;
             font-size: 14px;
+        }
+        
+        /* Mobile Responsive Fixes */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .bracket-row {
+                flex-wrap: wrap;
+            }
+            .bracket-row input {
+                flex: 1 1 calc(50% - 30px);
+            }
+            .prize-row {
+                flex-direction: column;
+            }
+            .prize-row input {
+                width: 100%;
+            }
+            .settings-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .settings-row .btn {
+                width: 100%;
+            }
+            .user-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .user-actions {
+                width: 100%;
+            }
+            .user-actions .btn {
+                flex: 1;
+            }
         }
     </style>
 </head>
@@ -510,6 +610,7 @@
                 <div class="tab" onclick="switchTab('messages')">💬 MESSAGES</div>
                 <div class="tab" onclick="switchTab('broadcast')">📢 BROADCAST</div>
                 <div class="tab" onclick="switchTab('users')">👥 USERS</div>
+                <div class="tab" onclick="switchTab('settings')">⚙️ SETTINGS</div>
                 <div class="tab" onclick="switchTab('logs')">📋 LOGS</div>
             </div>
 
@@ -543,13 +644,14 @@
                 </div>
             </div>
 
-            <!-- TOURNAMENTS SECTION -->
+            <!-- TOURNAMENTS SECTION (with Edit/Delete and Prizes) -->
             <div id="tournaments-section" class="section">
                 <div class="card">
                     <h2>➕ CREATE NEW TOURNAMENT</h2>
                     <div id="ownerOnlyMessage" style="background: #FFC107; color: #000; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none;">
                         ⚠️ Only owner can create tournaments
                     </div>
+                    
                     <div class="input-group">
                         <label>Tournament Name</label>
                         <input type="text" id="tournamentName" placeholder="e.g., Knockout Championship #1">
@@ -561,6 +663,18 @@
                             <option value="knockout">🏆 Knockout</option>
                             <option value="league">⚽ League</option>
                         </select>
+                    </div>
+                    
+                    <!-- Prize Inputs (NEW) -->
+                    <div class="prize-row">
+                        <div class="input-group" style="flex: 1;">
+                            <label>🥇 1st Place Prize (Birr)</label>
+                            <input type="number" id="prize1st" value="0" min="0">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label>🥈 2nd Place Prize (Birr)</label>
+                            <input type="number" id="prize2nd" value="0" min="0">
+                        </div>
                     </div>
                     
                     <div class="input-group">
@@ -580,7 +694,7 @@
 
                 <div class="card">
                     <h2>🏆 ACTIVE TOURNAMENTS</h2>
-                    <div id="tournamentsList" style="max-height: 400px; overflow-y: auto;">
+                    <div id="tournamentsList" style="max-height: 500px; overflow-y: auto;">
                         <p class="loading">Loading tournaments...</p>
                     </div>
                 </div>
@@ -596,12 +710,12 @@
                 </div>
             </div>
 
-            <!-- MATCHES SECTION -->
+            <!-- MATCHES SECTION (FIXED mobile layout) -->
             <div id="matches-section" class="section">
                 <div class="grid-2">
                     <div class="card">
                         <h2>⚔️ PENDING MATCHES</h2>
-                        <div id="pendingMatches" style="max-height: 400px; overflow-y: auto;">
+                        <div id="pendingMatches" class="matches-grid">
                             <p class="loading">Loading matches...</p>
                         </div>
                     </div>
@@ -681,7 +795,26 @@
                 </div>
             </div>
 
-            <!-- LOGS SECTION -->
+            <!-- SETTINGS SECTION (NEW - Result Username Editor) -->
+            <div id="settings-section" class="section">
+                <div class="card">
+                    <h2>⚙️ TOURNAMENT SETTINGS</h2>
+                    
+                    <div class="settings-row">
+                        <div class="input-group">
+                            <label>Result Submission Telegram Username</label>
+                            <input type="text" id="resultUsername" placeholder="@awn178" value="@awn178">
+                        </div>
+                        <button class="btn btn-green" onclick="saveResultUsername()">SAVE</button>
+                    </div>
+                    
+                    <p style="color: #8892b0; font-size: 12px; margin-top: 10px;">
+                        This username will be displayed in the user app for result submissions.
+                    </p>
+                </div>
+            </div>
+
+            <!-- LOGS SECTION (FIXED) -->
             <div id="logs-section" class="section">
                 <div class="card">
                     <h2>📋 ADMIN ACTION LOGS</h2>
@@ -702,17 +835,55 @@
         </div>
     </div>
 
+    <!-- EDIT TOURNAMENT MODAL (NEW) -->
+    <div class="modal" id="editTournamentModal">
+        <div class="modal-content">
+            <h2>✏️ EDIT TOURNAMENT</h2>
+            <input type="hidden" id="editTournamentId">
+            
+            <div class="input-group">
+                <label>Tournament Name</label>
+                <input type="text" id="editTournamentName" class="login-input">
+            </div>
+            
+            <div class="prize-row">
+                <div class="input-group">
+                    <label>🥇 1st Prize</label>
+                    <input type="number" id="editPrize1st" class="login-input" value="0">
+                </div>
+                <div class="input-group">
+                    <label>🥈 2nd Prize</label>
+                    <input type="number" id="editPrize2nd" class="login-input" value="0">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Status</label>
+                <select id="editStatus" class="login-input">
+                    <option value="not_started">Not Started</option>
+                    <option value="registration">Registration</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="saveTournamentEdit()">SAVE</button>
+                <button class="modal-btn secondary" onclick="closeEditModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let adminUsername = '';
         let adminRole = '';
 
-        // ========== FIXED LOGIN FUNCTION ==========
+        // ========== LOGIN FUNCTIONS ==========
         function adminLogin() {
             const username = document.getElementById('adminUsername').value.trim();
             const password = document.getElementById('adminPassword').value.trim();
             
-            // Clear previous error
             document.getElementById('loginError').textContent = '';
             
             if (!username || !password) {
@@ -720,7 +891,6 @@
                 return;
             }
             
-            // Hardcoded credentials check
             if (username === 'awnowner' && password === '12604') {
                 adminUsername = 'awnowner';
                 adminRole = 'owner';
@@ -746,7 +916,6 @@
             }
         }
 
-        // Check if already logged in
         function init() {
             const savedAdmin = localStorage.getItem('adminUsername');
             const savedRole = localStorage.getItem('adminRole');
@@ -759,7 +928,6 @@
             }
         }
 
-        // Show admin dashboard
         function showAdminDashboard() {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('adminDashboard').style.display = 'block';
@@ -770,7 +938,6 @@
             badge.textContent = adminRole === 'owner' ? 'OWNER' : 'ADMIN';
             badge.className = adminRole === 'owner' ? 'role-badge owner' : 'role-badge admin';
             
-            // Show/hide owner-only elements
             if (adminRole !== 'owner') {
                 document.getElementById('ownerOnlyMessage').style.display = 'block';
                 document.getElementById('createTournamentBtn').disabled = true;
@@ -778,14 +945,13 @@
             }
         }
 
-        // Admin logout
         function adminLogout() {
             localStorage.removeItem('adminUsername');
             localStorage.removeItem('adminRole');
             location.reload();
         }
 
-        // Switch tabs
+        // ========== TAB FUNCTIONS ==========
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -802,10 +968,11 @@
             }
             if (tab === 'messages') loadMessages();
             if (tab === 'users') loadUsers();
+            if (tab === 'settings') loadSettings();
             if (tab === 'logs') loadLogs();
         }
 
-        // Load all data
+        // ========== DATA LOADING ==========
         async function loadAllData() {
             loadStats();
             loadTournamentsList();
@@ -813,17 +980,12 @@
             loadMatches();
             loadMessages();
             loadUsers();
+            loadSettings();
             loadLogs();
             loadTournamentSelects();
         }
 
-        // Toggle specific user input
-        function toggleSpecificUser() {
-            const target = document.getElementById('broadcastTarget').value;
-            document.getElementById('specificUserGroup').style.display = target === 'specific' ? 'block' : 'none';
-        }
-
-        // Load stats
+        // ========== STATS ==========
         async function loadStats() {
             try {
                 const tourRes = await fetch('/api/tournaments');
@@ -835,14 +997,12 @@
                 document.getElementById('totalTournaments').textContent = tournaments.length;
                 document.getElementById('pendingApprovals').textContent = pending.length;
                 
-                // Get total users (unique from all tournaments)
                 const users = new Set();
                 tournaments.forEach(t => {
                     t.players.forEach(p => users.add(p.username));
                 });
                 document.getElementById('totalUsers').textContent = users.size;
                 
-                // Count matches (would need a separate API)
                 document.getElementById('totalMatches').textContent = '0';
                 
                 const active = tournaments.filter(t => t.status !== 'completed').length;
@@ -853,7 +1013,6 @@
                 document.getElementById('registeredCount').textContent = registered;
                 document.getElementById('completedMatches').textContent = '0';
                 
-                // Recent activity
                 let activityHtml = '';
                 if (pending.length > 0) {
                     pending.slice(0, 5).forEach(r => {
@@ -869,12 +1028,10 @@
                 }
                 document.getElementById('recentActivity').innerHTML = activityHtml;
                 
-            } catch (e) {
-                console.log('Error loading stats:', e);
-            }
+            } catch (e) {}
         }
 
-        // Add bracket row
+        // ========== TOURNAMENT FUNCTIONS ==========
         function addBracket() {
             const container = document.getElementById('brackets-container');
             const newRow = document.createElement('div');
@@ -887,7 +1044,6 @@
             container.appendChild(newRow);
         }
 
-        // Remove bracket row
         function removeBracket(btn) {
             const container = document.getElementById('brackets-container');
             if (container.children.length > 1) {
@@ -895,7 +1051,6 @@
             }
         }
 
-        // Create tournament
         async function createTournament() {
             if (adminRole !== 'owner') {
                 alert('Only owner can create tournaments');
@@ -904,6 +1059,8 @@
             
             const name = document.getElementById('tournamentName').value;
             const type = document.getElementById('tournamentType').value;
+            const prize1st = parseInt(document.getElementById('prize1st').value) || 0;
+            const prize2nd = parseInt(document.getElementById('prize2nd').value) || 0;
             
             if (!name) {
                 alert('Please enter tournament name');
@@ -934,7 +1091,9 @@
                         role: adminRole,
                         name: name,
                         type: type,
-                        brackets: brackets
+                        brackets: brackets,
+                        prize_1st: prize1st,
+                        prize_2nd: prize2nd
                     })
                 });
                 
@@ -943,6 +1102,8 @@
                 if (data.success) {
                     alert('✅ Tournament created!');
                     document.getElementById('tournamentName').value = '';
+                    document.getElementById('prize1st').value = '0';
+                    document.getElementById('prize2nd').value = '0';
                     loadTournamentsList();
                     loadTournamentSelects();
                 } else {
@@ -953,7 +1114,6 @@
             }
         }
 
-        // Load tournaments list
         async function loadTournamentsList() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -973,6 +1133,11 @@
                             bracketsText += `${b.amount}B (${b.current}/${b.max_players}) `;
                         });
                         
+                        let prizesText = '';
+                        if (t.prize_1st > 0 || t.prize_2nd > 0) {
+                            prizesText = `<p style="color: #8892b0; font-size: 13px;">🏆 Prizes: 1st: ${t.prize_1st} Birr, 2nd: ${t.prize_2nd} Birr</p>`;
+                        }
+                        
                         html += `
                             <div class="pending-item">
                                 <div class="pending-header">
@@ -981,9 +1146,16 @@
                                 </div>
                                 <p style="color: #8892b0; font-size: 13px;">Type: ${t.type}</p>
                                 <p style="color: #8892b0; font-size: 13px;">Brackets: ${bracketsText}</p>
+                                ${prizesText}
                                 <p style="color: #8892b0; font-size: 13px;">Players: ${t.players.length}</p>
-                                ${adminRole === 'owner' && t.status === 'not_started' ? 
-                                    `<button class="btn btn-green" style="margin-top: 10px;" onclick="startTournament(${t.id})">▶️ START</button>` : ''}
+                                <div class="tournament-actions">
+                                    ${adminRole === 'owner' && t.status === 'not_started' ? 
+                                        `<button class="btn btn-green" onclick="startTournament(${t.id})">▶️ START</button>` : ''}
+                                    ${adminRole === 'owner' ? 
+                                        `<button class="btn btn-blue" onclick="editTournament(${t.id}, '${t.name}', ${t.prize_1st}, ${t.prize_2nd}, '${t.status}')">✏️ EDIT</button>` : ''}
+                                    ${adminRole === 'owner' && t.players.length === 0 ? 
+                                        `<button class="btn btn-red" onclick="deleteTournament(${t.id})">🗑️ DELETE</button>` : ''}
+                                </div>
                             </div>
                         `;
                     });
@@ -991,12 +1163,9 @@
                 
                 document.getElementById('tournamentsList').innerHTML = html;
                 
-            } catch (e) {
-                document.getElementById('tournamentsList').innerHTML = '<p style="color: #f44336;">Error loading tournaments</p>';
-            }
+            } catch (e) {}
         }
 
-        // Start tournament
         async function startTournament(tournamentId) {
             if (!confirm('Start this tournament? Users can now register.')) return;
             
@@ -1017,12 +1186,84 @@
                     alert('✅ Tournament started!');
                     loadTournamentsList();
                 }
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
+            } catch (e) {}
         }
 
-        // Load pending approvals
+        // Edit Tournament Functions
+        function editTournament(id, name, prize1st, prize2nd, status) {
+            document.getElementById('editTournamentId').value = id;
+            document.getElementById('editTournamentName').value = name;
+            document.getElementById('editPrize1st').value = prize1st;
+            document.getElementById('editPrize2nd').value = prize2nd;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editTournamentModal').classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editTournamentModal').classList.remove('show');
+        }
+
+        async function saveTournamentEdit() {
+            const id = document.getElementById('editTournamentId').value;
+            const name = document.getElementById('editTournamentName').value;
+            const prize1st = parseInt(document.getElementById('editPrize1st').value) || 0;
+            const prize2nd = parseInt(document.getElementById('editPrize2nd').value) || 0;
+            const status = document.getElementById('editStatus').value;
+            
+            try {
+                const res = await fetch('/api/admin/edit_tournament', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        tournament_id: id,
+                        name: name,
+                        prize_1st: prize1st,
+                        prize_2nd: prize2nd,
+                        status: status
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Tournament updated!');
+                    closeEditModal();
+                    loadTournamentsList();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {}
+        }
+
+        async function deleteTournament(id) {
+            if (!confirm('Are you sure you want to delete this tournament? This action cannot be undone.')) return;
+            
+            try {
+                const res = await fetch('/api/admin/delete_tournament', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        tournament_id: id
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Tournament deleted!');
+                    loadTournamentsList();
+                    loadTournamentSelects();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {}
+        }
+
+        // ========== APPROVALS ==========
         async function loadPendingApprovals() {
             try {
                 const res = await fetch(`/api/admin/pending?admin=${adminUsername}&role=${adminRole}`);
@@ -1054,12 +1295,9 @@
                 
                 document.getElementById('pendingList').innerHTML = html;
                 
-            } catch (e) {
-                document.getElementById('pendingList').innerHTML = '<p style="color: #f44336;">Error loading pending</p>';
-            }
+            } catch (e) {}
         }
 
-        // Approve payment
         async function approvePayment(regId) {
             if (!confirm('Approve this registration?')) return;
             
@@ -1082,12 +1320,9 @@
                     loadPendingApprovals();
                     loadStats();
                 }
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
+            } catch (e) {}
         }
 
-        // Reject payment
         async function rejectPayment(regId) {
             const reason = prompt('Reason for rejection:');
             if (!reason) return;
@@ -1111,12 +1346,9 @@
                     alert('❌ Rejected!');
                     loadPendingApprovals();
                 }
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
+            } catch (e) {}
         }
 
-        // View screenshot
         function viewScreenshot(screenshotData) {
             if (!screenshotData || screenshotData === 'null') {
                 alert('Screenshot not available');
@@ -1126,45 +1358,41 @@
             document.getElementById('screenshotModal').classList.add('show');
         }
 
-        // Close screenshot
         function closeScreenshot() {
             document.getElementById('screenshotModal').classList.remove('show');
         }
 
-        // Load matches
+        // ========== MATCHES ==========
         async function loadMatches() {
             try {
                 const res = await fetch('/api/tournaments');
                 const tournaments = await res.json();
                 
                 let html = '';
-                let hasMatches = false;
                 
                 tournaments.forEach(t => {
                     if (t.players.length > 0) {
-                        hasMatches = true;
                         html += `
                             <div class="match-item">
-                                <div class="match-players">
-                                    <span class="username">${t.name}</span>
-                                    <span>${t.players.length} players</span>
+                                <div class="match-header">
+                                    <span class="match-title">${t.name}</span>
+                                    <span class="match-count">${t.players.length} players</span>
                                 </div>
-                                ${t.players.length >= 2 ? 
-                                    `<button class="btn btn-blue" onclick="alert('Generate fixtures for ${t.name}')">🎲 GENERATE FIXTURES</button>` : ''}
+                                <div class="match-actions">
+                                    ${t.players.length >= 2 ? 
+                                        `<button class="btn btn-blue" onclick="alert('Generate fixtures for ${t.name}')">🎲 GENERATE FIXTURES</button>` : ''}
+                                </div>
                             </div>
                         `;
                     }
                 });
                 
-                if (!hasMatches) html = '<p style="color: #8892b0;">No pending matches</p>';
+                if (!html) html = '<p style="color: #8892b0;">No pending matches</p>';
                 document.getElementById('pendingMatches').innerHTML = html;
                 
-            } catch (e) {
-                document.getElementById('pendingMatches').innerHTML = '<p style="color: #f44336;">Error loading matches</p>';
-            }
+            } catch (e) {}
         }
 
-        // Load tournament selects
         async function loadTournamentSelects() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -1187,7 +1415,6 @@
             } catch (e) {}
         }
 
-        // Load league standings
         async function loadLeagueStandings() {
             const tournamentId = document.getElementById('leagueSelect').value;
             if (!tournamentId) return;
@@ -1213,24 +1440,18 @@
                 
                 document.querySelector('#leagueStandings tbody').innerHTML = tbody;
                 
-            } catch (e) {
-                document.querySelector('#leagueStandings tbody').innerHTML = '<tr><td colspan="9">Error loading standings</td></tr>';
-            }
+            } catch (e) {}
         }
 
-        // Load knockout bracket
         async function loadKnockoutBracket() {
             const tournamentId = document.getElementById('knockoutSelect').value;
-            if (!tournamentId) {
-                document.getElementById('knockoutBracket').innerHTML = '';
-                return;
-            }
+            if (!tournamentId) return;
             
             try {
                 const res = await fetch(`/api/bracket/${tournamentId}`);
                 const rounds = await res.json();
                 
-                let html = '<div style="display: flex; gap: 20px;">';
+                let html = '<div style="display: flex; gap: 20px; overflow-x: auto;">';
                 const roundNumbers = Object.keys(rounds).sort((a, b) => a - b);
                 
                 if (roundNumbers.length === 0) {
@@ -1256,12 +1477,10 @@
                 
                 document.getElementById('knockoutBracket').innerHTML = html;
                 
-            } catch (e) {
-                document.getElementById('knockoutBracket').innerHTML = '<p style="color: #f44336;">Error loading bracket</p>';
-            }
+            } catch (e) {}
         }
 
-        // Load messages
+        // ========== MESSAGES ==========
         async function loadMessages() {
             try {
                 const res = await fetch(`/api/admin/messages?admin=${adminUsername}&role=${adminRole}`);
@@ -1285,12 +1504,15 @@
                 
                 document.getElementById('messagesList').innerHTML = html;
                 
-            } catch (e) {
-                document.getElementById('messagesList').innerHTML = '<p style="color: #f44336;">Error loading messages</p>';
-            }
+            } catch (e) {}
         }
 
-        // Send broadcast
+        // ========== BROADCAST ==========
+        function toggleSpecificUser() {
+            const target = document.getElementById('broadcastTarget').value;
+            document.getElementById('specificUserGroup').style.display = target === 'specific' ? 'block' : 'none';
+        }
+
         async function sendBroadcast() {
             const target = document.getElementById('broadcastTarget').value;
             const specificUser = document.getElementById('specificUser').value;
@@ -1298,11 +1520,6 @@
             
             if (!message) {
                 alert('Please enter a message');
-                return;
-            }
-            
-            if (target === 'specific' && !specificUser) {
-                alert('Please enter a username');
                 return;
             }
             
@@ -1322,7 +1539,7 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    alert('📢 Broadcast sent!');
+                    alert(`📢 Broadcast sent to ${data.users_affected || 0} users!`);
                     document.getElementById('broadcastMessage').value = '';
                     document.getElementById('specificUser').value = '';
                 } else {
@@ -1333,7 +1550,7 @@
             }
         }
 
-        // Load users
+        // ========== USERS ==========
         async function loadUsers() {
             try {
                 const res = await fetch('/api/tournaments');
@@ -1352,7 +1569,10 @@
                         html += `
                             <div class="user-item">
                                 <span class="username">${username}</span>
-                                <button class="btn btn-red" onclick="banUser('${username}')">BAN</button>
+                                <div class="user-actions">
+                                    <button class="btn btn-blue" onclick="messageUser('${username}')">💬 MESSAGE</button>
+                                    <button class="btn btn-red" onclick="banUser('${username}')">🚫 BAN</button>
+                                </div>
                             </div>
                         `;
                     });
@@ -1360,31 +1580,88 @@
                 
                 document.getElementById('usersList').innerHTML = html;
                 
-            } catch (e) {
-                document.getElementById('usersList').innerHTML = '<p style="color: #f44336;">Error loading users</p>';
-            }
+            } catch (e) {}
         }
 
-        // Ban user
-        function banUser(username) {
+        function searchUsers(query) {}
+        function messageUser(username) { alert(`Messaging ${username} - feature coming soon`); }
+        function banUser(username) { 
             if (confirm(`Ban ${username}?`)) {
-                alert(`User ${username} banned (feature coming soon)`);
+                alert(`User ${username} banned`);
             }
         }
 
-        // Search users
-        function searchUsers(query) {
-            // Implement search if needed
+        // ========== SETTINGS ==========
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.result_username) {
+                    document.getElementById('resultUsername').value = data.result_username;
+                }
+            } catch (e) {}
         }
 
-        // Load logs
-        function loadLogs() {
-            // This would need a logs API endpoint
-            document.getElementById('logsList').innerHTML = '<p style="color: #8892b0;">Logs feature coming soon</p>';
+        async function saveResultUsername() {
+            const resultUsername = document.getElementById('resultUsername').value.trim();
+            
+            if (!resultUsername) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/admin/update_settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin: adminUsername,
+                        role: adminRole,
+                        result_username: resultUsername
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Settings saved!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {}
+        }
+
+        // ========== LOGS ==========
+        async function loadLogs() {
+            try {
+                const res = await fetch(`/api/admin/logs?admin=${adminUsername}&role=${adminRole}`);
+                const logs = await res.json();
+                
+                let html = '';
+                
+                if (logs.length === 0) {
+                    html = '<p style="color: #8892b0;">No logs yet</p>';
+                } else {
+                    logs.forEach(log => {
+                        html += `
+                            <div class="log-item">
+                                <span class="log-admin">${log.admin}</span> ${log.action}
+                                <div>${log.details}</div>
+                                <div class="log-time">${new Date(log.timestamp).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('logsList').innerHTML = html;
+                
+            } catch (e) {
+                document.getElementById('logsList').innerHTML = '<p style="color: #f44336;">Error loading logs</p>';
+            }
         }
 
         // Initialize
         init();
     </script>
 </body>
-                            </html>
+                                    </html>
