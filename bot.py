@@ -1,9 +1,8 @@
 import os
 import requests
 import time
-import threading
-from flask import Flask, request
 import logging
+from flask import Flask, request, jsonify
 
 # Telegram Bot Token
 BOT_TOKEN = "8406169991:AAHcP5z7eHiKiSFGlRH3fOSDQS5gkjK-0EM"
@@ -81,12 +80,18 @@ def webhook():
         username = data['message']['from'].get('username', '')
         first_name = data['message']['from'].get('first_name', '')
         
+        # Format username with @
+        if username:
+            full_username = f"@{username}"
+        else:
+            full_username = first_name
+        
         # Handle commands
         if text == '/start':
             welcome_message = f"""
 <b>⚽ Welcome to eFootball Tournament Bot!</b>
 
-Hello {first_name} (@{username})!
+Hello {first_name} {f'(@{username})' if username else ''}!
 
 This bot will send you notifications about:
 • Registration approvals
@@ -188,65 +193,10 @@ Contact admin @awn178 for help
     
     return {'ok': True}
 
-# Background notification sender
-class NotificationBot:
-    def __init__(self):
-        self.token = BOT_TOKEN
-        self.base_url = f"https://api.telegram.org/bot{self.token}"
-    
-    def send_notification(self, chat_id, message, parse_mode='HTML'):
-        """Send notification to specific chat_id"""
-        url = f"{self.base_url}/sendMessage"
-        payload = {
-            'chat_id': chat_id,
-            'text': message,
-            'parse_mode': parse_mode
-        }
-        try:
-            response = requests.post(url, json=payload)
-            logger.info(f"Notification sent to {chat_id}: {response.status_code}")
-            return response.json()
-        except Exception as e:
-            logger.error(f"Notification error: {e}")
-            return None
-    
-    def notify_admin(self, message, admin_type='both'):
-        """Send notification to admins"""
-        # In production, get admin chat_ids from database
-        admin_chat_ids = {
-            OWNER_USERNAME: None,  # Would be fetched from DB
-            ADMIN_USERNAME: None
-        }
-        
-        if admin_type == 'owner' and admin_chat_ids[OWNER_USERNAME]:
-            self.send_notification(admin_chat_ids[OWNER_USERNAME], f"👑 <b>Owner Notification</b>\n\n{message}")
-        elif admin_type == 'admin' and admin_chat_ids[ADMIN_USERNAME]:
-            self.send_notification(admin_chat_ids[ADMIN_USERNAME], f"📋 <b>Admin Notification</b>\n\n{message}")
-        elif admin_type == 'both':
-            if admin_chat_ids[OWNER_USERNAME]:
-                self.send_notification(admin_chat_ids[OWNER_USERNAME], f"👑 <b>Notification</b>\n\n{message}")
-            if admin_chat_ids[ADMIN_USERNAME]:
-                self.send_notification(admin_chat_ids[ADMIN_USERNAME], f"📋 <b>Notification</b>\n\n{message}")
-    
-    def notify_user_by_username(self, username, message):
-        """Send notification to user by username"""
-        # In production, get chat_id from database
-        chat_id = user_chat_ids.get(username)
-        if chat_id:
-            self.send_notification(chat_id, message)
-            return True
-        return False
-    
-    def broadcast_to_all(self, message, user_chat_ids_list):
-        """Send broadcast to multiple users"""
-        success_count = 0
-        for chat_id in user_chat_ids_list:
-            if chat_id:
-                result = self.send_notification(chat_id, f"📢 <b>Broadcast Message</b>\n\n{message}")
-                if result:
-                    success_count += 1
-        logger.info(f"Broadcast sent to {success_count} users")
-        return success_count
+# Health check endpoint
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok', 'bot': 'running'})
 
 # Notification templates
 class NotificationTemplates:
@@ -363,17 +313,6 @@ Don't forget your PIN! You need it to login.
 • If you forget, contact @awn178
         """
 
-# Initialize bot
-notification_bot = NotificationBot()
-
-# Function to run bot in background
-def run_bot():
-    # Set webhook when starting
-    set_webhook()
-    
-    # Run Flask app
-    app.run(host='0.0.0.0', port=5001)
-
 # API endpoints for the main app to send notifications
 @app.route('/api/notify/registration', methods=['POST'])
 def notify_registration():
@@ -385,8 +324,8 @@ def notify_registration():
     
     if chat_id:
         send_message(chat_id, message)
-        return {'success': True}
-    return {'success': False, 'error': 'No chat_id'}
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'No chat_id'})
 
 @app.route('/api/notify/broadcast', methods=['POST'])
 def notify_broadcast():
@@ -396,7 +335,6 @@ def notify_broadcast():
     message = data.get('message')
     user_list = data.get('users', [])
     
-    # In production, fetch chat_ids from database
     success_count = 0
     for user in user_list:
         chat_id = user.get('chat_id')
@@ -404,12 +342,12 @@ def notify_broadcast():
             send_message(chat_id, f"📢 <b>Broadcast</b>\n\n{message}")
             success_count += 1
     
-    return {'success': True, 'sent': success_count}
+    return jsonify({'success': True, 'sent': success_count})
 
 @app.route('/api/notify/test', methods=['GET'])
 def test_notification():
     """Test endpoint"""
-    return {'status': 'Bot is running', 'webhook': APP_URL + '/webhook'}
+    return jsonify({'status': 'Bot is running', 'webhook': APP_URL + '/webhook'})
 
 # If running standalone
 if __name__ == '__main__':
@@ -421,7 +359,11 @@ if __name__ == '__main__':
             remove_webhook()
         elif sys.argv[1] == 'test':
             print("Testing bot...")
-            # Test code here
+            # Test sending a message
+            test_chat_id = input("Enter your chat_id for testing: ")
+            if test_chat_id:
+                send_message(test_chat_id, "🤖 <b>Test message</b>\n\nBot is working correctly!")
+                print("Test message sent!")
     else:
         # Run Flask app for webhook
         port = int(os.environ.get('PORT', 5001))
